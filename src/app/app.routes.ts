@@ -1,3 +1,24 @@
 import { Routes } from '@angular/router';
+import { LoginComponent } from './pages/login/login.component';
+import { AdminShellComponent } from './layout/admin-shell/admin-shell.component';
+import { OwnersComponent } from './pages/owners/owners.component';
+import { UnitsComponent } from './pages/units/units.component';
+import { ParkingComponent } from './pages/parking/parking.component';
+import { authGuard } from './auth.guard';
+import { adminGuard } from './admin.guard';
 
-export const routes: Routes = [];
+export const routes: Routes = [
+  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  { path: 'login', component: LoginComponent },
+  {
+    path: '',
+    component: AdminShellComponent,
+    canActivate: [authGuard, adminGuard],
+    children: [
+      { path: 'owners', component: OwnersComponent },
+      { path: 'units', component: UnitsComponent },
+      { path: 'parking', component: ParkingComponent },
+    ],
+  },
+  { path: '**', redirectTo: 'login' },
+];

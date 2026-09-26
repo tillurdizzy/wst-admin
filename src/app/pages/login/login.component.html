@@ -1,0 +1,59 @@
+<div class="login-page">
+  <div class="login-banner">Westbury Square Townhomes Manager’s Dashboard</div>
+
+  <div class="login-container">
+    <p-card>
+      <ng-template #title>Manager Login</ng-template>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <p-fluid>
+          <div class="form-container">
+            <div class="field">
+              <p-floatlabel variant="on">
+                <input pInputText id="email" formControlName="email" type="email" autocomplete="username" />
+                <label for="email">Email</label>
+              </p-floatlabel>
+              <small *ngIf="loginForm.get('email')?.hasError('required') && loginForm.get('email')?.touched" class="p-error">
+                Email is required
+              </small>
+              <small *ngIf="loginForm.get('email')?.hasError('email') && loginForm.get('email')?.touched" class="p-error">
+                Please enter a valid email
+              </small>
+            </div>
+
+            <div class="field">
+              <p-floatlabel variant="on">
+                <p-password id="password" formControlName="password" [toggleMask]="true" [feedback]="false" autocomplete="current-password" />
+                <label for="password">Password</label>
+              </p-floatlabel>
+              <small *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched" class="p-error">
+                Password is required
+              </small>
+            </div>
+
+            <div class="field">
+              <p-button
+                type="submit"
+                label="Login"
+                icon="pi pi-sign-in"
+                [disabled]="loading || loginForm.invalid"
+                [loading]="loading"
+              ></p-button>
+            </div>
+
+            <div class="field">
+              <p-button
+                type="button"
+                label="Reset Password"
+                icon="pi pi-envelope"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="resetPassword()"
+              ></p-button>
+            </div>
+          </div>
+        </p-fluid>
+      </form>
+    </p-card>
+  </div>
+  <p-toast></p-toast>
+</div>
