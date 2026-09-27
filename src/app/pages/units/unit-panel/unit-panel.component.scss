@@ -1,0 +1,72 @@
+:host {
+  display: block;
+}
+
+.panel {
+  display: grid;
+  grid-template-columns: 1.1fr 1.2fr 1.2fr 1.2fr;
+  gap: 1rem;
+  min-height: 280px;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.col-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--p-primary-color) 12%, white);
+  border-radius: 10px;
+  padding: 0.35rem 0.5rem;
+}
+
+.unit-num {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.person {
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--p-surface-200);
+}
+
+.status-dot {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+}
+
+.status-dot.green {
+  background: #22c55e;
+}
+
+.status-dot.red {
+  background: #ef4444;
+}
+
+.status-dot.yellow {
+  background: #eab308;
+}
+
+.auth-yes {
+  color: #15803d;
+}
+
+.auth-no {
+  color: #b91c1c;
+}
+
+.hint,
+.panel-msg {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  margin: 0.25rem 0 0;
+}

@@ -1,1 +1,77 @@
-<p>units works!</p>
+<div class="units-page">
+  <div class="toolbar card">
+    <div class="title-block">
+      <h2>Units</h2>
+      <span class="row-count">{{ filtered.length }} of {{ units.length }} units</span>
+    </div>
+    <div class="toolbar-right">
+      <label>Search</label>
+      <input
+        pInputText
+        class="search-input"
+        [ngModel]="search"
+        (ngModelChange)="onSearchInput($event)"
+        inputmode="numeric"
+        placeholder="Unit #"
+      />
+      <label>Presets</label>
+      <p-select
+        [options]="presets"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="preset"
+        (ngModelChange)="onPreset()"
+        styleClass="preset-select"
+      />
+    </div>
+  </div>
+
+  <p class="load-error" *ngIf="loadError">{{ loadError }}</p>
+
+  <div class="card table-card">
+    <p-table
+      [value]="filtered"
+      [loading]="loading"
+      [scrollable]="true"
+      scrollHeight="300px"
+      dataKey="unit"
+      selectionMode="single"
+      [(selection)]="selected"
+      (onRowSelect)="onRowSelect($event)"
+      styleClass="p-datatable-sm units-table"
+      [tableStyle]="{ width: '70rem', 'table-layout': 'fixed' }"
+    >
+      <ng-template #header>
+        <tr>
+          <th style="width: 6rem">Unit</th>
+          <th style="width: 18rem">Street</th>
+          <th style="width: 14rem">CSZ</th>
+          <th style="width: 14rem">Owner</th>
+          <th style="width: 8rem">Occupied</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-row>
+        <tr [pSelectableRow]="row">
+          <td>{{ row.unit }}</td>
+          <td>{{ row.street }}</td>
+          <td>{{ row.csz }}</td>
+           <td>{{ row.ownerName }}</td>
+          <td>{{ row.owner_occupied ? 'Owner' : 'Tenant' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="7">No units match the current search.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+    <p class="hint">Select a unit to view details below.</p>
+  </div>
+
+  <section class="card selected" *ngIf="selected">
+    <h3>Selected Unit</h3>
+    <app-unit-panel [unitRow]="selected" />
+  </section>
+</div>
+
+<p-toast />

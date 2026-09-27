@@ -1,0 +1,70 @@
+<section class="panel">
+  <div class="col col-unit">
+    <div class="col-title">Unit</div>
+    <div class="unit-num">#{{ unitRow?.unit }}</div>
+    <div>{{ unitRow?.street }}</div>
+    <div>{{ unitRow?.csz }}</div>
+    <div>{{ unitRow?.sqft ? unitRow?.sqft + ' sq ft' : '' }}</div>
+    <div>Legal #: {{ unitRow?.legal || '—' }}</div>
+  </div>
+
+  <div class="col col-owner">
+    <div class="col-title">
+      Owner
+      <span class="status-dot" [class.green]="ownerConfirmed" [class.red]="!ownerConfirmed"></span>
+      <i class="pi auth-key" [ngClass]="ownerHasAuth ? 'pi-key auth-yes' : 'pi-ban auth-no'"></i>
+    </div>
+    <ng-container *ngIf="unitRow?.owner as owner; else noOwner">
+      <div>{{ owner.firstname }} {{ owner.lastname }}</div>
+      <div>{{ owner.cell }}</div>
+      <div>{{ owner.email }}</div>
+    </ng-container>
+    <ng-template #noOwner>
+      <div>No owner linked</div>
+    </ng-template>
+    <p-button label="Assign New Owner" (onClick)="assignNewOwner()" />
+  </div>
+
+  <div class="col col-people">
+    <div class="col-title">
+      {{ residentLabel }}
+      <span
+        class="status-dot"
+        [class.green]="residentsStatus === 'green'"
+        [class.red]="residentsStatus === 'red'"
+        [class.yellow]="residentsStatus === 'yellow'"
+      ></span>
+    </div>
+    <div class="person" *ngIf="unitRow?.owner_occupied && unitRow?.owner">
+      <div>{{ unitRow?.owner?.firstname }} {{ unitRow?.owner?.lastname }} (Owner)</div>
+      <div>{{ unitRow?.owner?.cell }}</div>
+      <div>{{ unitRow?.owner?.email }}</div>
+    </div>
+    <div class="person" *ngFor="let r of residents">
+      <div>{{ r.firstname }} {{ r.lastname }}</div>
+      <div>{{ r.cell }}</div>
+      <div>{{ r.email }}</div>
+    </div>
+    <p class="hint" *ngIf="!residents.length && !unitRow?.owner_occupied">No tenants assigned.</p>
+  </div>
+
+  <div class="col col-vehicles">
+    <div class="col-title">
+      Vehicles
+      <span
+        class="status-dot"
+        [class.green]="vehiclesStatus === 'green'"
+        [class.red]="vehiclesStatus === 'red'"
+        [class.yellow]="vehiclesStatus === 'yellow'"
+      ></span>
+    </div>
+    <div class="person" *ngFor="let v of vehicles">
+      <div>{{ v.make }} {{ v.model }}</div>
+      <div>{{ v.color }}</div>
+      <div>License: {{ v.tag }}</div>
+    </div>
+    <p class="hint" *ngIf="!vehicles.length">No vehicles assigned.</p>
+  </div>
+</section>
+
+<p class="panel-msg" *ngIf="message">{{ message }}</p>

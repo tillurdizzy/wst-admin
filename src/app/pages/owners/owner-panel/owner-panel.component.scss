@@ -1,0 +1,93 @@
+:host {
+  display: block;
+}
+
+.panel {
+  display: grid;
+  grid-template-columns: 4fr 2fr 3fr 3fr;
+  gap: 1rem;
+  min-height: 300px;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.col-title {
+  text-align: center;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--p-primary-color) 12%, white);
+  border-radius: 10px;
+  padding: 0.35rem 0.5rem;
+}
+
+.col input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.name-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.name-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.unit-row,
+.admin-row,
+.auth-status {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.assign-label {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.unit-owner,
+.hint {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+.status-icon {
+  font-size: 1rem;
+}
+
+.auth-yes {
+  color: #15803d;
+}
+
+.auth-no {
+  color: #b91c1c;
+}
+
+.panel-msg {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+}
+
+.panel-msg.ok {
+  color: #15803d;
+}
+
+.panel-msg.err {
+  color: #b91c1c;
+}
+.update-line {
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.update-label {
+  font-weight: 600;
+  margin-right: 0.35rem;
+}

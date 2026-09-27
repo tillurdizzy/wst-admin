@@ -1,8 +1,11 @@
 <div class="owners-page">
   <div class="toolbar card">
-    <p class="load-error" *ngIf="loadError">{{ loadError }}</p>
-    <h2>Owners</h2>
+    <div class="title-block">
+      <h2>Owners</h2>
+      <span class="row-count">{{ filtered.length }} of {{ owners.length }} owners</span>
+    </div>
     <div class="toolbar-right">
+      <p-button label="New Owner" icon="pi pi-plus" (onClick)="startNewOwner()" />
       <label>Search</label>
       <input pInputText class="search-input" [(ngModel)]="search" (ngModelChange)="onSearch()" />
       <label>Presets</label>
@@ -19,33 +22,30 @@
     </div>
   </div>
 
-    <div class="card table-card">
-    <p class="row-count">{{ filtered.length }} of {{ owners.length }} owners</p>
-        <p-table
+  <p class="load-error" *ngIf="loadError">{{ loadError }}</p>
+
+  <div class="card table-card">
+    <p-table
       [value]="filtered"
       [loading]="loading"
       [scrollable]="true"
-      scrollHeight="360px"
+      scrollHeight="300px"
       dataKey="owner_id"
       selectionMode="single"
       [(selection)]="selected"
       (onRowSelect)="onRowSelect($event)"
       styleClass="p-datatable-sm owners-table"
-      [tableStyle]="{ width: '68rem', 'table-layout': 'fixed' }"
+      [tableStyle]="{ width: '83rem', 'table-layout': 'fixed' }"
     >
       <ng-template #header>
         <tr>
-          <th style="width: 8rem">Lastname</th>
-          <th style="width: 8rem">Firstname</th>
-          <th style="width: 7rem">Unit(s)</th>
+          <th style="width: 10rem">Lastname</th>
+          <th style="width: 10rem">Firstname</th>
+          <th style="width: 8rem">Unit(s)</th>
           <th style="width: 14rem">Email</th>
           <th style="width: 8rem">Cell</th>
-          <th style="width: 12rem">Street</th>
-          <th style="width: 10rem">CSZ</th>
-          <th style="width: 4.5rem">Admin</th>
-          <th style="width: 6.5rem">Confirmed</th>
-          <th style="width: 8rem">Updated at</th>
-          <th style="width: 9rem">Updated by</th>
+          <th style="width: 18rem">Street</th>
+          <th style="width: 15rem">CSZ</th>
         </tr>
       </ng-template>
       <ng-template #body let-row>
@@ -57,95 +57,26 @@
           <td>{{ row.cell }}</td>
           <td>{{ row.street }}</td>
           <td>{{ row.csz }}</td>
-          <td>{{ row.is_admin ? 'Y' : '' }}</td>
-          <td>{{ row.data_confirmed ? 'Y' : '' }}</td>
-          <td>{{ row.updated_at | date: 'short' }}</td>
-          <td>{{ row.updated_by }}</td>
         </tr>
       </ng-template>
       <ng-template #emptymessage>
         <tr>
-          <td colspan="11">No owners match the current search.</td>
+          <td colspan="7">No owners match the current search.</td>
         </tr>
       </ng-template>
     </p-table>
     <p class="hint">Data is not editable in the table. Select a row to edit below.</p>
   </div>
 
-  <section class="card selected" *ngIf="selected">
-    <h3>Selected Row</h3>
-    <div class="summary">
-      <div>owner_id {{ selected.owner_id }}</div>
-      <div>{{ selected.firstname }} {{ selected.lastname }}</div>
-      <div>{{ selected.street }}</div>
-      <div>{{ selected.csz }}</div>
-      <div>{{ selected.cell }}</div>
-      <div>
-        <a *ngIf="selected.email" [href]="'mailto:' + selected.email">{{ selected.email }}</a>
-      </div>
-      <div class="auth">Auth linked: {{ selected.uuid ? selected.uuid : 'no' }}</div>
-    </div>
-
-    <div class="actions">
-      <p-button label="Edit name" icon="pi pi-pencil" [outlined]="true" (onClick)="openEdit('name')" />
-      <p-button label="Edit Address" icon="pi pi-pencil" [outlined]="true" (onClick)="openEdit('address')" />
-      <p-button label="Edit Phone" icon="pi pi-pencil" [outlined]="true" (onClick)="openEdit('phone')" />
-      <p-button label="Edit email" icon="pi pi-pencil" [outlined]="true" (onClick)="openEdit('email')" />
-    </div>
-
-    <div class="units-box">
-      <div class="units-title">Units</div>
-      <div class="unit-row" *ngFor="let u of selected.unitList">
-        <span>Unit {{ u.unit }}</span>
-        <p-checkbox
-          [binary]="true"
-          [(ngModel)]="u.owner_occupied"
-          (ngModelChange)="toggleOccupied(u.unit, $event)"
-          inputId="occ-{{ u.unit }}"
-        />
-        <label [for]="'occ-' + u.unit">Owner occupied</label>
-      </div>
-      <div class="assign">
-        <label>Assign another unit</label>
-        <div class="assign-row">
-          <input pInputText [(ngModel)]="assignUnit" placeholder="Unit #" />
-          <p-button label="Assign" (onClick)="assignAnotherUnit()" />
-        </div>
-      </div>
-    </div>
+  <section class="card selected" *ngIf="selected || panelMode === 'new'">
+    <h3>{{ panelMode === 'new' ? 'New Owner' : 'Selected Owner' }}</h3>
+    <app-owner-panel
+      [mode]="panelMode"
+      [owner]="selected"
+      (saved)="onPanelSaved($event)"
+      (deleted)="onPanelDeleted()"
+    />
   </section>
 </div>
-
-<p-dialog
-  [(visible)]="editDialog"
-  [header]="editKind === 'name' ? 'Edit name' : editKind === 'address' ? 'Edit Address' : editKind === 'phone' ? 'Edit Phone' : 'Edit email'"
-  [modal]="true"
-  [style]="{ width: '28rem' }"
->
-  <div class="edit-fields" *ngIf="editKind === 'name'">
-    <label>First name</label>
-    <input pInputText [(ngModel)]="editDraft.firstname" />
-    <label>Last name</label>
-    <input pInputText [(ngModel)]="editDraft.lastname" />
-  </div>
-  <div class="edit-fields" *ngIf="editKind === 'address'">
-    <label>Street</label>
-    <input pInputText [(ngModel)]="editDraft.street" />
-    <label>City / State / Zip</label>
-    <input pInputText [(ngModel)]="editDraft.csz" />
-  </div>
-  <div class="edit-fields" *ngIf="editKind === 'phone'">
-    <label>Cell</label>
-    <input pInputText [(ngModel)]="editDraft.cell" />
-  </div>
-  <div class="edit-fields" *ngIf="editKind === 'email'">
-    <label>Email</label>
-    <input pInputText [(ngModel)]="editDraft.email" />
-  </div>
-  <ng-template pTemplate="footer">
-    <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="editDialog = false" />
-    <p-button label="Save" [loading]="saving" (onClick)="saveEdit()" />
-  </ng-template>
-</p-dialog>
 
 <p-toast />

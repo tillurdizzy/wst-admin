@@ -1,0 +1,113 @@
+<section class="panel" [class.new-mode]="mode === 'new'">
+  <div class="col col-owner">
+    <div class="col-title">Owner</div>
+    <div class="name-row">
+      <input pInputText [(ngModel)]="firstname" placeholder="first name" />
+      <input pInputText [(ngModel)]="lastname" placeholder="last name" />
+    </div>
+    <input pInputText [(ngModel)]="street" placeholder="street" />
+    <input pInputText [(ngModel)]="csz" placeholder="city, state, zip" />
+    <input pInputText [(ngModel)]="cell" placeholder="phone" />
+    <p-button
+      *ngIf="mode === 'edit'"
+      label="Save"
+      [disabled]="!canSaveOwner"
+      [loading]="savingOwner"
+      (onClick)="saveOwner()"
+    />
+  </div>
+
+  <div class="col col-units">
+    <div class="col-title">Units</div>
+    <div class="unit-row" *ngFor="let u of unitList">
+      <span>Unit {{ u.unit }}</span>
+      <p-checkbox
+        [binary]="true"
+        [(ngModel)]="u.owner_occupied"
+        (ngModelChange)="toggleOccupied(u.unit, $event)"
+        [inputId]="'occ-' + u.unit"
+      />
+      <label [for]="'occ-' + u.unit">Owner occupied</label>
+    </div>
+    <label class="assign-label">Assign unit</label>
+    <input
+      pInputText
+      [(ngModel)]="assignUnit"
+      (ngModelChange)="onAssignUnitChange()"
+      placeholder="Unit #"
+    />
+    <p-button
+      *ngIf="mode === 'edit'"
+      label="Assign"
+      [disabled]="!ownerId"
+      [loading]="assigning"
+      (onClick)="assignUnitToOwner()"
+    />
+    <div class="unit-owner" *ngIf="currentUnitOwner">{{ currentUnitOwner }}</div>
+    <div class="hint" *ngIf="mode === 'new'">Unit is required. It is saved with Create.</div>
+  </div>
+
+  <div class="col col-auth">
+    <div class="col-title">Authentication</div>
+    <input pInputText [(ngModel)]="email" placeholder="email" />
+
+    <ng-container *ngIf="mode === 'edit'">
+      <div class="auth-status">
+        <i class="pi status-icon" [ngClass]="uuid ? 'pi-key auth-yes' : 'pi-ban auth-no'"></i>
+        <span>{{ uuid ? 'Auth login linked' : 'No Auth login yet' }}</span>
+      </div>
+      <p-button
+        [label]="uuid ? 'Save email' : 'Save email and create Auth'"
+        [disabled]="!ownerId"
+        [loading]="savingAuth"
+        (onClick)="saveEmailAndAuth()"
+      />
+      <div class="admin-row">
+        <p-checkbox [binary]="true" [(ngModel)]="isAdmin" inputId="is-admin" />
+        <label for="is-admin">Admin</label>
+      </div>
+      <p-button
+        label="Save Admin"
+        [disabled]="!ownerId"
+        [loading]="savingAdmin"
+        (onClick)="saveAdmin()"
+      />
+    </ng-container>
+
+    <p-button
+      *ngIf="mode === 'new'"
+      label="Create"
+      [disabled]="!canCreate"
+      [loading]="savingOwner"
+      (onClick)="saveNewOwner()"
+    />
+  </div>
+
+    <div class="col col-updates">
+    <div class="col-title">Updates</div>
+    <ng-container *ngIf="mode === 'edit' && owner">
+      <div class="update-line">
+        <span class="update-label">Last updated:</span>
+        <span>{{ owner.updated_at ? (owner.updated_at | date: 'MMM d, y h:mm a') : '—' }}</span>
+      </div>
+      <div class="update-line">
+        <span class="update-label">By:</span>
+        <span>{{ owner.updated_by || '—' }}</span>
+      </div>
+      <div class="update-line">
+        <span class="update-label">Data integrity:</span>
+        <span>{{ owner.data_confirmed ? 'Confirmed' : 'Unconfirmed' }}</span>
+      </div>
+      <p-button
+        label="Delete"
+        severity="danger"
+        [disabled]="!canDelete"
+        (onClick)="deleteOwner()"
+      />
+      <div class="hint" *ngIf="!canDelete">Delete is only available when this owner has no units.</div>
+    </ng-container>
+  </div>
+</section>
+
+<p class="panel-msg ok" *ngIf="message">{{ message }}</p>
+<p class="panel-msg err" *ngIf="error">{{ error }}</p>
