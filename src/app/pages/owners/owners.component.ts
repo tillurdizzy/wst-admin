@@ -38,13 +38,17 @@ export class OwnersComponent implements OnInit {
   loadError = '';
   search = '';
 
-  presets = [
+   presets = [
     { label: 'All owners', value: 'all' },
     { label: 'Admins', value: 'admins' },
     { label: 'Unconfirmed', value: 'unconfirmed' },
     { label: 'No email', value: 'noemail' },
     { label: 'No Auth uuid', value: 'noauth' },
     { label: 'No unit linked', value: 'nounit' },
+    { label: 'Offsite owners', value: 'offsite' },
+    { label: 'Sort by first name', value: 'sortfirst' },
+    { label: 'Sort by last name', value: 'sortlast' },
+    { label: 'Sort by unit', value: 'sortunit' },
   ];
   preset = 'all';
 
@@ -133,7 +137,7 @@ export class OwnersComponent implements OnInit {
     this.loading = false;
   }
 
-  applyFilters() {
+    applyFilters() {
     const q = this.search.trim().toLowerCase();
     this.filtered = this.owners.filter((o) => {
       if (this.preset === 'admins' && !o.is_admin) return false;
@@ -141,6 +145,10 @@ export class OwnersComponent implements OnInit {
       if (this.preset === 'noemail' && o.email) return false;
       if (this.preset === 'noauth' && o.uuid) return false;
       if (this.preset === 'nounit' && o.unitList.length > 0) return false;
+      if (this.preset === 'offsite') {
+        const street = (o.street ?? '').toLowerCase();
+        if (street.includes('chimney') || street.includes('burdine')) return false;
+      }
       if (!q) return true;
       const hay = [
         o.lastname,
@@ -157,6 +165,14 @@ export class OwnersComponent implements OnInit {
         .toLowerCase();
       return hay.includes(q);
     });
+
+    if (this.preset === 'sortfirst') {
+      this.filtered.sort((a, b) => (a.firstname ?? '').localeCompare(b.firstname ?? '', undefined, { sensitivity: 'base' }));
+    } else if (this.preset === 'sortlast') {
+      this.filtered.sort((a, b) => (a.lastname ?? '').localeCompare(b.lastname ?? '', undefined, { sensitivity: 'base' }));
+    } else if (this.preset === 'sortunit') {
+      this.filtered.sort((a, b) => (a.unitList[0]?.unit ?? 9999) - (b.unitList[0]?.unit ?? 9999));
+    }
   }
 
   onSearch() {

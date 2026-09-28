@@ -1,1 +1,74 @@
-<p>parking works!</p>
+<div class="parking-page">
+  <div class="toolbar card">
+    <div class="title-block">
+      <h2>Parking</h2>
+      <span class="row-count">{{ filtered.length }} of {{ spaces.length }} spaces</span>
+    </div>
+    <div class="toolbar-right">
+      <label>Search</label>
+      <input pInputText class="search-input" [(ngModel)]="search" (ngModelChange)="onSearch()" />
+      <label>Presets</label>
+      <p-select
+        [options]="presets"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="preset"
+        (ngModelChange)="onPreset()"
+        styleClass="preset-select"
+      />
+    </div>
+  </div>
+
+  <p class="load-error" *ngIf="loadError">{{ loadError }}</p>
+
+  <div class="card table-card">
+    <p-table
+      [value]="filtered"
+      [loading]="loading"
+      [scrollable]="true"
+      scrollHeight="300px"
+      dataKey="space"
+      selectionMode="single"
+      [(selection)]="selected"
+      (onRowSelect)="onRowSelect($event)"
+      styleClass="p-datatable-sm parking-table"
+      [tableStyle]="{ width: '70rem', 'table-layout': 'fixed' }"
+    >
+      <ng-template #header>
+        <tr>
+          <th style="width: 8rem">Space ID</th>
+          <th style="width: 7rem">Assigned</th>
+          <th style="width: 14rem">Vehicle Owner</th>
+          <th style="width: 10rem">License Tag</th>
+          <th style="width: 10rem">Make</th>
+          <th style="width: 10rem">Model</th>
+          <th style="width: 8rem">Color</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-row>
+        <tr [pSelectableRow]="row">
+          <td>{{ row.space }}</td>
+          <td>{{ row.unit }}</td>
+          <td>{{ row.name }}</td>
+          <td>{{ row.tag }}</td>
+          <td>{{ row.make }}</td>
+          <td>{{ row.model }}</td>
+          <td>{{ row.color }}</td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="7">No spaces match the current search.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+    <p class="hint">Select a space to view details below.</p>
+  </div>
+
+  <section class="card selected" *ngIf="selected">
+    <h3>Selected Space</h3>
+    <app-parking-panel [spaceRow]="selected" (changed)="load()" />
+  </section>
+</div>
+
+<p-toast />

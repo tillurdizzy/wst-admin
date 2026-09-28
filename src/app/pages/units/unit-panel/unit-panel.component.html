@@ -3,9 +3,9 @@
     <div class="col-title">Unit</div>
     <div class="unit-num">#{{ unitRow?.unit }}</div>
     <div>{{ unitRow?.street }}</div>
-    <div>{{ unitRow?.csz }}</div>
-    <div>{{ unitRow?.sqft ? unitRow?.sqft + ' sq ft' : '' }}</div>
-    <div>Legal #: {{ unitRow?.legal || '—' }}</div>
+    <div>Bedrooms: {{ unitRow?.bdrms ?? '—' }}</div>
+    <div>Square Feet: {{ unitRow?.sqft ?? '—' }}</div>
+    <div>Legal Description Unit #: {{ unitRow?.num ?? '—' }}</div>
   </div>
 
   <div class="col col-owner">
@@ -15,14 +15,21 @@
       <i class="pi auth-key" [ngClass]="ownerHasAuth ? 'pi-key auth-yes' : 'pi-ban auth-no'"></i>
     </div>
     <ng-container *ngIf="unitRow?.owner as owner; else noOwner">
-      <div>{{ owner.firstname }} {{ owner.lastname }}</div>
-      <div>{{ owner.cell }}</div>
-      <div>{{ owner.email }}</div>
+      <div class="person">
+        <p-button label="edit" severity="secondary" size="small" (onClick)="openEditOwnerDialog()" />
+        <div>
+          <div>{{ owner.firstname }} {{ owner.lastname }}</div>
+          <div>{{ owner.street }}</div>
+          <div>{{ owner.csz }}</div>
+          <div>{{ owner.cell }}</div>
+          <div>{{ owner.email }}</div>
+        </div>
+      </div>
     </ng-container>
     <ng-template #noOwner>
       <div>No owner linked</div>
     </ng-template>
-    <p-button label="Assign New Owner" (onClick)="assignNewOwner()" />
+    <p-button label="Assign New Owner" (onClick)="openOwnerDialog()" />
   </div>
 
   <div class="col col-people">
@@ -36,16 +43,23 @@
       ></span>
     </div>
     <div class="person" *ngIf="unitRow?.owner_occupied && unitRow?.owner">
-      <div>{{ unitRow?.owner?.firstname }} {{ unitRow?.owner?.lastname }} (Owner)</div>
-      <div>{{ unitRow?.owner?.cell }}</div>
-      <div>{{ unitRow?.owner?.email }}</div>
+      <p-button label="edit" severity="secondary" size="small" [disabled]="true" />
+      <div>
+        <div>{{ unitRow?.owner?.firstname }} {{ unitRow?.owner?.lastname }} (Owner)</div>
+        <div>{{ unitRow?.owner?.cell }}</div>
+        <div>{{ unitRow?.owner?.email }}</div>
+      </div>
     </div>
     <div class="person" *ngFor="let r of residents">
-      <div>{{ r.firstname }} {{ r.lastname }}</div>
-      <div>{{ r.cell }}</div>
-      <div>{{ r.email }}</div>
+      <p-button label="edit" severity="secondary" size="small" (onClick)="openEditResident(r)" />
+      <div>
+        <div>{{ r.firstname }} {{ r.lastname }}</div>
+        <div>{{ r.cell }}</div>
+        <div>{{ r.email }}</div>
+      </div>
     </div>
     <p class="hint" *ngIf="!residents.length && !unitRow?.owner_occupied">No tenants assigned.</p>
+    <p-button [label]="addPeopleLabel" (onClick)="openResidentDialog()" />
   </div>
 
   <div class="col col-vehicles">
@@ -59,12 +73,157 @@
       ></span>
     </div>
     <div class="person" *ngFor="let v of vehicles">
-      <div>{{ v.make }} {{ v.model }}</div>
-      <div>{{ v.color }}</div>
-      <div>License: {{ v.tag }}</div>
+      <p-button label="edit" severity="secondary" size="small" (onClick)="openEditVehicle(v)" />
+      <div>
+        <div>{{ v.make }} {{ v.model }}</div>
+        <div>{{ v.color }}</div>
+        <div>License: {{ v.tag }}</div>
+      </div>
     </div>
     <p class="hint" *ngIf="!vehicles.length">No vehicles assigned.</p>
+    <p-button label="Add Vehicle" (onClick)="openVehicleDialog()" />
   </div>
 </section>
 
 <p class="panel-msg" *ngIf="message">{{ message }}</p>
+<p class="panel-msg err" *ngIf="error && !ownerDialog && !editOwnerDialog && !residentDialog && !vehicleDialog">{{ error }}</p>
+
+<p-dialog
+  [(visible)]="ownerDialog"
+  [header]="'Add New Owner Unit #' + unitRow?.unit"
+  [modal]="true"
+  [style]="{ width: '26rem' }"
+>
+  <div class="edit-fields">
+    <label>First Name</label>
+    <input pInputText [(ngModel)]="ownerForm.firstname" />
+    <label>Last Name</label>
+    <input pInputText [(ngModel)]="ownerForm.lastname" />
+    <label>Email</label>
+    <input pInputText [(ngModel)]="ownerForm.email" />
+    <small>Optional. If you enter one, a login is created (password 123456).</small>
+    <label>Phone</label>
+    <input pInputText [(ngModel)]="ownerForm.cell" />
+    <label>Street</label>
+    <input pInputText [(ngModel)]="ownerForm.street" />
+    <label>City, State, Zip</label>
+    <input pInputText [(ngModel)]="ownerForm.csz" />
+    <div class="check-row">
+      <p-checkbox [binary]="true" [(ngModel)]="ownerForm.ownerOccupied" inputId="ao-occ" />
+      <label for="ao-occ">Owner Occupied</label>
+    </div>
+    <div class="check-row">
+      <p-checkbox [binary]="true" [(ngModel)]="ownerForm.dataConfirmed" inputId="ao-conf" />
+      <label for="ao-conf">Data confirmed</label>
+    </div>
+    <p class="panel-msg err" *ngIf="error">{{ error }}</p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="ownerDialog = false" />
+    <p-button label="Submit new owner" [loading]="saving" (onClick)="saveNewOwner()" />
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [(visible)]="editOwnerDialog"
+  [header]="'Edit Owner Unit #' + unitRow?.unit"
+  [modal]="true"
+  [style]="{ width: '26rem' }"
+>
+  <div class="edit-fields">
+    <label>First Name</label>
+    <input pInputText [(ngModel)]="ownerForm.firstname" />
+    <label>Last Name</label>
+    <input pInputText [(ngModel)]="ownerForm.lastname" />
+    <label>Email</label>
+    <input pInputText [ngModel]="ownerForm.email" [disabled]="true" />
+    <small>Email is changed on the Owners page so Auth stays in sync.</small>
+    <label>Phone</label>
+    <input pInputText [(ngModel)]="ownerForm.cell" />
+    <label>Street</label>
+    <input pInputText [(ngModel)]="ownerForm.street" />
+    <label>City, State, Zip</label>
+    <input pInputText [(ngModel)]="ownerForm.csz" />
+    <div class="check-row">
+      <p-checkbox [binary]="true" [(ngModel)]="ownerForm.ownerOccupied" inputId="eo-occ" />
+      <label for="eo-occ">Owner Occupied</label>
+    </div>
+    <div class="check-row">
+      <p-checkbox [binary]="true" [(ngModel)]="ownerForm.dataConfirmed" inputId="eo-conf" />
+      <label for="eo-conf">Data confirmed</label>
+    </div>
+    <p class="panel-msg err" *ngIf="error">{{ error }}</p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="editOwnerDialog = false" />
+    <p-button label="Save" [loading]="saving" (onClick)="saveOwnerEdits()" />
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [header]="editingResidentId ? 'Edit Resident' : 'Add Resident'"
+  [(visible)]="residentDialog"
+  [modal]="true"
+  [style]="{ width: '24rem' }"
+>
+  <div class="edit-fields">
+    <label>First Name</label>
+    <input pInputText [(ngModel)]="residentForm.firstname" />
+    <label>Last Name</label>
+    <input pInputText [(ngModel)]="residentForm.lastname" />
+    <label>Phone</label>
+    <input pInputText [(ngModel)]="residentForm.cell" />
+    <label>Email</label>
+    <input pInputText [(ngModel)]="residentForm.email" />
+    <div class="check-row">
+      <p-checkbox [binary]="true" [(ngModel)]="residentForm.dataConfirmed" inputId="ar-conf" />
+      <label for="ar-conf">Data confirmed</label>
+    </div>
+    <p class="panel-msg err" *ngIf="error">{{ error }}</p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button
+      *ngIf="editingResidentId"
+      label="Delete"
+      severity="danger"
+      [loading]="saving"
+      (onClick)="deleteResident()"
+    />
+    <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="residentDialog = false" />
+    <p-button label="Save" [loading]="saving" (onClick)="saveResident()" />
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [header]="editingVehicleId ? 'Edit Vehicle' : 'Add Vehicle'"
+  [(visible)]="vehicleDialog"
+  [modal]="true"
+  [style]="{ width: '24rem' }"
+>
+  <div class="edit-fields">
+    <label>Make</label>
+    <input pInputText [(ngModel)]="vehicleForm.make" />
+    <label>Model</label>
+    <input pInputText [(ngModel)]="vehicleForm.model" />
+    <label>Color</label>
+    <input pInputText [(ngModel)]="vehicleForm.color" />
+    <label>License</label>
+    <input pInputText [(ngModel)]="vehicleForm.tag" />
+    <div class="check-row">
+      <p-checkbox [binary]="true" [(ngModel)]="vehicleForm.dataConfirmed" inputId="av-conf" />
+      <label for="av-conf">Data confirmed</label>
+    </div>
+    <p class="panel-msg err" *ngIf="error">{{ error }}</p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button
+      *ngIf="editingVehicleId"
+      label="Delete"
+      severity="danger"
+      [loading]="saving"
+      (onClick)="deleteVehicle()"
+    />
+    <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="vehicleDialog = false" />
+    <p-button label="Save" [loading]="saving" (onClick)="saveVehicle()" />
+  </ng-template>
+</p-dialog>

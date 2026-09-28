@@ -69,9 +69,9 @@ export class UnitsComponent implements OnInit {
     this.loading = true;
     this.loadError = '';
 
-    const { data: unitRows, error } = await this.supabase.client
+        const { data: unitRows, error } = await this.supabase.client
       .from('units')
-      .select('unit, street, csz, owner_occupied')
+      .select('unit, owner_occupied, bdrms, num, sqft, street')
       .lt('unit', 600)
       .order('unit', { ascending: true });
 
@@ -90,7 +90,7 @@ export class UnitsComponent implements OnInit {
 
     const { data: owners } = await this.supabase.client
       .from('owners')
-      .select('owner_id, firstname, lastname, cell, email, data_confirmed, uuid');
+      .select('owner_id, firstname, lastname, cell, email, street, csz, data_confirmed, uuid');
 
     const ownerById = new Map<number, UnitOwnerInfo>();
     for (const o of owners ?? []) {
@@ -107,9 +107,9 @@ export class UnitsComponent implements OnInit {
       return {
         unit: u.unit,
         street: u.street ?? null,
-        csz: u.csz ?? null,
+        bdrms: u.bdrms ?? null,
         sqft: u.sqft ?? null,
-        legal: u.legal ?? null,
+        num: u.num ?? null,
         owner_occupied: !!u.owner_occupied,
         owner,
         ownerName: owner ? `${owner.firstname ?? ''} ${owner.lastname ?? ''}`.trim() : '',

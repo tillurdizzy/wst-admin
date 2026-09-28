@@ -32,6 +32,7 @@ export class OwnerPanelComponent implements OnChanges {
   cell = '';
   email = '';
   isAdmin = false;
+  dataConfirmed = false;
   unitList: { unit: number; owner_occupied: boolean }[] = [];
   uuid: string | null = null;
   ownerId: number | null = null;
@@ -101,6 +102,7 @@ export class OwnerPanelComponent implements OnChanges {
       this.cell = '';
       this.email = '';
       this.isAdmin = false;
+      this.dataConfirmed = false;
       this.unitList = [];
       this.uuid = null;
       this.snapshot = this.ownerSnapshot();
@@ -114,6 +116,7 @@ export class OwnerPanelComponent implements OnChanges {
     this.cell = this.owner.cell ?? '';
     this.email = this.owner.email ?? '';
     this.isAdmin = !!this.owner.is_admin;
+    this.dataConfirmed = !!this.owner.data_confirmed;
     this.unitList = [...(this.owner.unitList ?? [])];
     this.uuid = this.owner.uuid;
     this.snapshot = this.ownerSnapshot();
@@ -361,7 +364,7 @@ export class OwnerPanelComponent implements OnChanges {
     }
   }
 
-  async saveAdmin() {
+    async saveAdmin() {
     if (!this.ownerId) {
       this.error = 'Save the owner record first.';
       return;
@@ -369,7 +372,10 @@ export class OwnerPanelComponent implements OnChanges {
     this.savingAdmin = true;
     const { error } = await this.supabase.client
       .from('owners')
-      .update({ is_admin: this.isAdmin })
+      .update({
+        is_admin: this.isAdmin,
+        updated_by: this.supabase.user()?.email ?? null,
+      })
       .eq('owner_id', this.ownerId);
     this.savingAdmin = false;
     if (error) {
@@ -377,6 +383,26 @@ export class OwnerPanelComponent implements OnChanges {
       return;
     }
     this.message = this.isAdmin ? 'Admin access on.' : 'Admin access off.';
+    this.saved.emit(this.ownerId);
+  }
+
+  async saveConfirmed() {
+    if (!this.ownerId) {
+      this.error = 'Save the owner record first.';
+      return;
+    }
+    const { error } = await this.supabase.client
+      .from('owners')
+      .update({
+        data_confirmed: this.dataConfirmed,
+        updated_by: this.supabase.user()?.email ?? null,
+      })
+      .eq('owner_id', this.ownerId);
+    if (error) {
+      this.error = error.message;
+      return;
+    }
+    this.message = this.dataConfirmed ? 'Data confirmed.' : 'Data unconfirmed.';
     this.saved.emit(this.ownerId);
   }
 

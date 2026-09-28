@@ -49,7 +49,12 @@
 
   <div class="col col-auth">
     <div class="col-title">Authentication</div>
-    <input pInputText [(ngModel)]="email" placeholder="email" />
+    <input
+      pInputText
+      [(ngModel)]="email"
+      placeholder="email"
+      [disabled]="mode === 'edit' && !!uuid"
+    />
 
     <ng-container *ngIf="mode === 'edit'">
       <div class="auth-status">
@@ -57,21 +62,31 @@
         <span>{{ uuid ? 'Auth login linked' : 'No Auth login yet' }}</span>
       </div>
       <p-button
-        [label]="uuid ? 'Save email' : 'Save email and create Auth'"
+        *ngIf="!uuid"
+        label="Save email and create Auth"
         [disabled]="!ownerId"
         [loading]="savingAuth"
         (onClick)="saveEmailAndAuth()"
       />
+      <div class="hint" *ngIf="uuid">Email is locked. Change the login in the Supabase dashboard.</div>
       <div class="admin-row">
-        <p-checkbox [binary]="true" [(ngModel)]="isAdmin" inputId="is-admin" />
+        <p-checkbox
+          [binary]="true"
+          [(ngModel)]="isAdmin"
+          (ngModelChange)="saveAdmin()"
+          inputId="is-admin"
+        />
         <label for="is-admin">Admin</label>
       </div>
-      <p-button
-        label="Save Admin"
-        [disabled]="!ownerId"
-        [loading]="savingAdmin"
-        (onClick)="saveAdmin()"
-      />
+      <div class="admin-row">
+        <p-checkbox
+          [binary]="true"
+          [(ngModel)]="dataConfirmed"
+          (ngModelChange)="saveConfirmed()"
+          inputId="data-confirmed"
+        />
+        <label for="data-confirmed">Confirm data</label>
+      </div>
     </ng-container>
 
     <p-button
@@ -83,7 +98,7 @@
     />
   </div>
 
-    <div class="col col-updates">
+  <div class="col col-updates">
     <div class="col-title">Updates</div>
     <ng-container *ngIf="mode === 'edit' && owner">
       <div class="update-line">

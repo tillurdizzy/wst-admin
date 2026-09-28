@@ -44,33 +44,33 @@
       <ng-template #header>
         <tr>
           <th style="width: 6rem">Unit</th>
+          <th style="width: 16rem">Owner</th>
           <th style="width: 18rem">Street</th>
           <th style="width: 14rem">CSZ</th>
-          <th style="width: 14rem">Owner</th>
           <th style="width: 8rem">Occupied</th>
         </tr>
       </ng-template>
       <ng-template #body let-row>
         <tr [pSelectableRow]="row">
           <td>{{ row.unit }}</td>
+          <td>{{ row.ownerName }}</td>
           <td>{{ row.street }}</td>
           <td>{{ row.csz }}</td>
-           <td>{{ row.ownerName }}</td>
           <td>{{ row.owner_occupied ? 'Owner' : 'Tenant' }}</td>
         </tr>
       </ng-template>
       <ng-template #emptymessage>
         <tr>
-          <td colspan="7">No units match the current search.</td>
+          <td colspan="5">No units match the current search.</td>
         </tr>
       </ng-template>
     </p-table>
     <p class="hint">Select a unit to view details below.</p>
   </div>
 
-  <section class="card selected" *ngIf="selected">
+    <section class="card selected" *ngIf="selected">
     <h3>Selected Unit</h3>
-    <app-unit-panel [unitRow]="selected" />
+    <app-unit-panel [unitRow]="selected" (changed)="load()" />
   </section>
 </div>
 

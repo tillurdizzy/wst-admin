@@ -1,0 +1,112 @@
+<section class="panel">
+  <div class="col col-space">
+    <div class="col-title">Space</div>
+       <div class="unit-num">Space ID {{ spaceRow?.space }} assigned to Unit {{ spaceRow?.unit }}</div>
+    <div class="explain">
+      Space ID is the number painted on the car port. Some painted numbers are used twice, so all
+      IDs have .1 or .2 added (200.1 and 200.2) for accurate identification.
+    </div>
+    <div class="explain">
+      Assigned is the unit assigned to that space — normally, unit 200 parks in space 200.
+      However, neighbors sometimes swap spaces, in which case the Unit will not match Space ID.
+    </div>
+    <div class="explain">
+      600-series spaces are flexible spaces used for guests and Registered users assigned and approved by the Board.
+    </div>
+    <p-button
+      *ngIf="isRegistered"
+      label="Assign Registered Space"
+      (onClick)="openAssignDialog()"
+    />
+    <p-button
+      *ngIf="!isRegistered"
+      label="Swap Spaces"
+      severity="secondary"
+      (onClick)="openSwapDialog()"
+    />
+  </div>
+
+  <div class="col col-owner">
+    <div class="col-title">Vehicle Owner</div>
+    <div>{{ spaceRow?.name || 'No name on file' }}</div>
+    <p-button label="edit" severity="secondary" size="small" (onClick)="openOwnerDialog()" />
+  </div>
+
+  <div class="col col-vehicle">
+    <div class="col-title">Vehicle Description</div>
+    <ng-container *ngIf="spaceRow?.make || spaceRow?.tag; else noVehicle">
+      <div>{{ spaceRow?.make }} {{ spaceRow?.model }}</div>
+      <div>{{ spaceRow?.color }}</div>
+      <div>License: {{ spaceRow?.tag }}</div>
+    </ng-container>
+    <ng-template #noVehicle>
+      <div>No vehicle on this space</div>
+    </ng-template>
+    <p-button label="edit" severity="secondary" size="small" (onClick)="openVehicleDialog()" />
+  </div>
+</section>
+
+<p class="panel-msg" *ngIf="message">{{ message }}</p>
+<p class="panel-msg err" *ngIf="error && !ownerDialog && !vehicleDialog && !assignDialog && !swapDialog">{{ error }}</p>
+
+<p-dialog header="Vehicle Owner" [(visible)]="ownerDialog" [modal]="true" [style]="{ width: '24rem' }">
+  <div class="edit-fields">
+    <label>Name</label>
+    <input pInputText [(ngModel)]="ownerName" />
+    <p class="panel-msg err" *ngIf="error">{{ error }}</p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="ownerDialog = false" />
+    <p-button label="Save" [loading]="saving" (onClick)="saveOwner()" />
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Vehicle Description" [(visible)]="vehicleDialog" [modal]="true" [style]="{ width: '24rem' }">
+  <div class="edit-fields">
+    <label>Make</label>
+    <input pInputText [(ngModel)]="vehicleForm.make" />
+    <label>Model</label>
+    <input pInputText [(ngModel)]="vehicleForm.model" />
+    <label>Color</label>
+    <input pInputText [(ngModel)]="vehicleForm.color" />
+    <label>License</label>
+    <input pInputText [(ngModel)]="vehicleForm.tag" />
+    <div class="check-row">
+      <p-checkbox [binary]="true" [(ngModel)]="vehicleForm.dataConfirmed" inputId="pk-conf" />
+      <label for="pk-conf">Data confirmed</label>
+    </div>
+    <p class="panel-msg err" *ngIf="error">{{ error }}</p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Clear vehicle" severity="danger" [loading]="saving" (onClick)="clearVehicle()" />
+    <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="vehicleDialog = false" />
+    <p-button label="Save" [loading]="saving" (onClick)="saveVehicle()" />
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Assign Registered Space" [(visible)]="assignDialog" [modal]="true" [style]="{ width: '24rem' }">
+  <div class="edit-fields">
+    <p>Space {{ spaceRow?.space }} will be assigned to a unit. The parking row is kept.</p>
+    <label>Unit</label>
+    <input pInputText [(ngModel)]="assignUnit" />
+    <p class="panel-msg err" *ngIf="error">{{ error }}</p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="assignDialog = false" />
+    <p-button label="Assign" [loading]="saving" (onClick)="assignRegistered()" />
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Swap Spaces" [(visible)]="swapDialog" [modal]="true" [style]="{ width: '24rem' }">
+  <div class="edit-fields">
+    <p>Trade unit assignments between space {{ spaceRow?.space }} and another Space ID. Vehicles stay on their painted space.</p>
+    <label>Other Space ID</label>
+    <input pInputText [(ngModel)]="swapSpace" (ngModelChange)="onSwapSpaceChange()" />
+    <div class="hint" *ngIf="swapHint">{{ swapHint }}</div>
+    <p class="panel-msg err" *ngIf="error">{{ error }}</p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="swapDialog = false" />
+    <p-button label="Swap" [loading]="saving" (onClick)="swapSpaces()" />
+  </ng-template>
+</p-dialog>
