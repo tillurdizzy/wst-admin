@@ -4,8 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
 import { SupabaseService } from '../../services/supabase.service';
 import { ParkingRow } from './parking-row';
 import { ParkingPanelComponent } from './parking-panel/parking-panel.component';
@@ -19,7 +22,10 @@ import { ParkingPanelComponent } from './parking-panel/parking-panel.component';
     TableModule,
     InputTextModule,
     SelectModule,
+    ButtonModule,
+    DialogModule,
     ToastModule,
+    NgxExtendedPdfViewerModule,
     ParkingPanelComponent,
   ],
   templateUrl: './parking.component.html',
@@ -42,6 +48,10 @@ export class ParkingComponent implements OnInit {
   ];
   preset = 'all';
 
+  pdfVisible = false;
+  pdfTitle = '';
+  pdfSrc = '';
+
   constructor(
     private supabase: SupabaseService,
     private messages: MessageService
@@ -49,6 +59,12 @@ export class ParkingComponent implements OnInit {
 
   async ngOnInit() {
     await this.load();
+  }
+
+  openPdf(kind: 'map' | 'form') {
+    this.pdfSrc = kind === 'map' ? '/parking-space-map.pdf' : '/parking-form.pdf';
+    this.pdfTitle = kind === 'map' ? 'Parking Space Map' : 'Parking Form';
+    this.pdfVisible = true;
   }
 
   onSearch() {

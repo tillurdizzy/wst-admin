@@ -5,6 +5,8 @@
       <span class="row-count">{{ filtered.length }} of {{ spaces.length }} spaces</span>
     </div>
     <div class="toolbar-right">
+      <p-button label="Parking Space Map" (onClick)="openPdf('map')" />
+      <p-button label="Parking Form" (onClick)="openPdf('form')" />
       <label>Search</label>
       <input pInputText class="search-input" [(ngModel)]="search" (ngModelChange)="onSearch()" />
       <label>Presets</label>
@@ -37,7 +39,7 @@
       <ng-template #header>
         <tr>
           <th style="width: 8rem">Space ID</th>
-          <th style="width: 7rem">Assigned</th>
+          <th style="width: 7rem">Unit</th>
           <th style="width: 14rem">Vehicle Owner</th>
           <th style="width: 10rem">License Tag</th>
           <th style="width: 10rem">Make</th>
@@ -70,5 +72,41 @@
     <app-parking-panel [spaceRow]="selected" (changed)="load()" />
   </section>
 </div>
+
+<p-dialog
+  [(visible)]="pdfVisible"
+  [header]="pdfTitle"
+  [modal]="true"
+  [dismissableMask]="true"
+  [style]="{ width: '90vw', height: '90vh' }"
+  [contentStyle]="{ height: '100%', padding: '0', overflow: 'hidden' }"
+>
+  <ngx-extended-pdf-viewer
+    *ngIf="pdfVisible && pdfSrc"
+    [src]="pdfSrc"
+    [height]="'80vh'"
+    [handTool]="true"
+    [showToolbar]="true"
+    [showHandToolButton]="true"
+    [showPrintButton]="true"
+    [showZoomButtons]="true"
+    [showDownloadButton]="false"
+    [showOpenFileButton]="false"
+    [showDrawEditor]="false"
+    [showTextEditor]="false"
+    [showStampEditor]="false"
+    [showHighlightEditor]="false"
+    [showRotateButton]="false"
+    [showPagingButtons]="false"
+    [showPresentationModeButton]="false"
+    [showSidebarButton]="false"
+    [showFindButton]="false"
+    [showSpreadButton]="false"
+    [showPropertiesButton]="false"
+    [showSecondaryToolbarButton]="false"
+    [zoom]="'page-height'"
+    [textLayer]="false"
+  />
+</p-dialog>
 
 <p-toast />

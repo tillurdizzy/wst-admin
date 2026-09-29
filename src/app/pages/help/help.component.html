@@ -1,0 +1,105 @@
+<div class="help-page">
+  <div class="card intro">
+    <h2>Help</h2>
+    <p>
+      This dashboard is for Board members and trusted managers. The resident site is separate.
+      Use Owners, Units, and Parking to keep the directory accurate.
+    </p>
+  </div>
+
+  <section class="card">
+    <h3>How every page works</h3>
+    <ul>
+      <li>The table is the working list. It shows the important fields for that page.</li>
+      <li>Search and Presets at the top filter that list. They do not change the database by themselves.</li>
+      <li>Click a row. The panel under the table loads that record so you can edit it.</li>
+      <li>Nothing is saved until you use a Save button or toggle a checkbox that saves on its own (Admin, Confirm data, Owner occupied).</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h3>Owners</h3>
+    <p>
+      Owners is the legal record: name, mailing address, phone, email, login, and which unit they own.
+    </p>
+
+    <h4>Presets</h4>
+    <ul>
+      <li><strong>All owners</strong> — every owner row.</li>
+      <li><strong>Admins</strong> — owners marked Admin.</li>
+      <li><strong>Unconfirmed</strong> — Confirm data is off.</li>
+      <li><strong>No email</strong> — no email on the owner row.</li>
+      <li><strong>No Auth uuid</strong> — no website login yet.</li>
+      <li><strong>No unit linked</strong> — owner is not assigned to a unit. Safe list for cleanup.</li>
+      <li><strong>Offsite owners</strong> — mailing street does not contain Chimney or Burdine.</li>
+      <li><strong>Sort by first name / last name / unit</strong> — same list, different order.</li>
+    </ul>
+
+    <h4>Bottom panel</h4>
+    <p><strong>1. Owner</strong> — first name, last name, street, city/state/zip, phone. Save writes only these fields. First name is required (it can be a business name).</p>
+    <p>
+      <strong>2. Units</strong> — units this owner currently holds. Owner occupied means they live in that unit.
+      Toggle Owner occupied and it saves immediately. Assign unit moves that unit to this owner.
+      The previous owner loses the unit. We do not insert a second link row. We only change who is on that unit.
+    </p>
+    <p>
+      <strong>3. Authentication</strong> — email and website login for the resident site.
+    </p>
+    <ul>
+      <li>If there is no login yet, enter an email and use <strong>Save email and create Auth</strong>.</li>
+      <li>A login is created with temporary password <strong>123456</strong>. The owner should change that on first sign-in.</li>
+      <li>After a login exists, the email field is locked. Changing it here would not change the login. Change a login email in the Supabase dashboard if you must.</li>
+      <li>
+        <strong>Admin</strong> saves when you check or uncheck it. Admin on the resident site can see every unit and edit records.
+        Give this only to Board members and other people you trust. It is not a casual setting.
+      </li>
+      <li>
+        <strong>Confirm data</strong> also saves when toggled. It does <em>not</em> mean the record is complete.
+        It means what is there is accurate to the best of our knowledge.
+      </li>
+    </ul>
+    <p>
+      <strong>4. Updates</strong> — last saved date, who saved it, and whether data is confirmed.
+      Delete is only enabled when this owner has no units. That also tries to remove their Auth login.
+    </p>
+    <p>
+      We do not overwrite an existing owner to “update” them onto another unit. We insert a new owner row when needed
+      and point the unit at that row. Old rows with no unit stay until you delete them by hand.
+    </p>
+  </section>
+
+  <section class="card">
+    <h3>Units</h3>
+    <p>
+      Units is about the home: who lives there and which cars are on file.
+      Owner name and mailing address still show and can be edited, but the focus is occupancy.
+    </p>
+    <ul>
+      <li>Search accepts unit numbers only.</li>
+      <li>Presets: all units, owner occupied, tenant occupied.</li>
+      <li>The panel shows unit facts (street / mail station, bedrooms, square feet, legal unit number).</li>
+      <li>Assign New Owner creates a new owner and points this unit at them. The old owner is left on any other units they still have.</li>
+      <li>
+        <strong>Residents</strong> vs <strong>Tenants</strong>: a tenant is a resident who is not the owner.
+        When the unit is owner occupied the heading says Residents. When it is tenant occupied the heading says Tenants.
+        The owner row in that list cannot be edited there — edit the owner on Owners or with the Owner edit button.
+      </li>
+      <li>Add / edit residents and vehicles with the dialogs. Delete a resident removes that row. Clear a vehicle sets the vehicle fields to empty and keeps the parking space.</li>
+      <li>Green / yellow / red dots are confirmation status: all confirmed, mixed, or none confirmed.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h3>Parking</h3>
+    <p>Parking manages the painted spaces and the cars on them.</p>
+    <ul>
+      <li>Space ID is the number painted on the car port. Some painted numbers are used twice, so all IDs have .1 or .2 added (200.1 and 200.2) for accurate identification.</li>
+      <li>Unit is who that space belongs to. Declaration usually matches space 200 to unit 200. Neighbors sometimes trade, so they can differ.</li>
+      <li>600-series spaces are extras (registered overflow, guest, handicap). They are not a home number.</li>
+      <li><strong>Assign Registered Space</strong> (600+) points that extra space at a unit.</li>
+      <li><strong>Swap Spaces</strong> (under 600) trades the unit assignment between two Space IDs. The cars stay on the painted spaces.</li>
+      <li>Edit Vehicle Owner and Vehicle Description in the dialogs. Clear vehicle empties make, model, color, tag, and name.</li>
+      <li>Parking Space Map and Parking Form open the PDFs over this page. Use the hand tool to drag a zoomed map.</li>
+    </ul>
+  </section>
+</div>
