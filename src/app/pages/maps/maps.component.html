@@ -1,0 +1,46 @@
+<div class="maps-page">
+  <div class="card">
+    <h2>Maps</h2>
+    <div class="btn-row">
+      <p-button label="Units" (onClick)="openPdf('units')" />
+      <p-button label="Hot Water" (onClick)="openPdf('hotwater')" />
+      <p-button label="Security Cameras" (onClick)="openPdf('cameras')" />
+    </div>
+  </div>
+</div>
+
+<p-dialog
+  [(visible)]="pdfVisible"
+  [header]="pdfTitle"
+  [modal]="true"
+  [dismissableMask]="true"
+  [style]="{ width: '90vw', height: '90vh' }"
+  [contentStyle]="{ height: '100%', padding: '0', overflow: 'hidden' }"
+>
+  <ngx-extended-pdf-viewer
+    *ngIf="pdfVisible && pdfSrc"
+    [src]="pdfSrc"
+    [height]="'80vh'"
+    [handTool]="true"
+    [showToolbar]="true"
+    [showHandToolButton]="true"
+    [showPrintButton]="true"
+    [showDownloadButton]="false"
+    [showOpenFileButton]="false"
+    [showDrawEditor]="false"
+    [showTextEditor]="false"
+    [showStampEditor]="false"
+    [showHighlightEditor]="false"
+    [showRotateButton]="false"
+    [showPagingButtons]="false"
+    [showZoomButtons]="true"
+    [showPresentationModeButton]="false"
+    [showSidebarButton]="false"
+    [showFindButton]="false"
+    [showSpreadButton]="false"
+    [showPropertiesButton]="false"
+    [showSecondaryToolbarButton]="false"
+    [zoom]="'page-height'"
+    [textLayer]="false"
+  />
+</p-dialog>
