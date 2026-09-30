@@ -91,3 +91,10 @@
   font-weight: 600;
   margin-right: 0.35rem;
 }
+
+.owner-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.7rem;
+}

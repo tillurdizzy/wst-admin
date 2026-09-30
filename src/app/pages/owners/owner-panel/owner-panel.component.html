@@ -8,13 +8,28 @@
     <input pInputText [(ngModel)]="street" placeholder="street" />
     <input pInputText [(ngModel)]="csz" placeholder="city, state, zip" />
     <input pInputText [(ngModel)]="cell" placeholder="phone" />
-    <p-button
-      *ngIf="mode === 'edit'"
-      label="Save"
-      [disabled]="!canSaveOwner"
-      [loading]="savingOwner"
-      (onClick)="saveOwner()"
-    />
+    <div class="owner-actions" *ngIf="mode === 'edit'">
+      <p-button
+        label="Save"
+        [disabled]="!canSaveOwner"
+        [loading]="savingOwner"
+        (onClick)="saveOwner()"
+      />
+      <p-checkbox
+        [binary]="true"
+        [(ngModel)]="isAdmin"
+        (ngModelChange)="saveAdmin()"
+        inputId="is-admin"
+      />
+      <label for="is-admin">Admin</label>
+      <p-checkbox
+        [binary]="true"
+        [(ngModel)]="dataConfirmed"
+        (ngModelChange)="saveConfirmed()"
+        inputId="data-confirmed"
+      />
+      <label for="data-confirmed">Confirm data</label>
+    </div>
   </div>
 
   <div class="col col-units">
@@ -48,7 +63,7 @@
   </div>
 
   <div class="col col-auth">
-    <div class="col-title">Authentication</div>
+    <div class="col-title">Email &amp; Login</div>
     <input
       pInputText
       [(ngModel)]="email"
@@ -59,7 +74,7 @@
     <ng-container *ngIf="mode === 'edit'">
       <div class="auth-status">
         <i class="pi status-icon" [ngClass]="uuid ? 'pi-key auth-yes' : 'pi-ban auth-no'"></i>
-        <span>{{ uuid ? 'Auth login linked' : 'No Auth login yet' }}</span>
+        <span>{{ uuid ? 'Website login linked' : 'No website login yet' }}</span>
       </div>
       <p-button
         *ngIf="!uuid"
@@ -68,25 +83,7 @@
         [loading]="savingAuth"
         (onClick)="saveEmailAndAuth()"
       />
-      <div class="hint" *ngIf="uuid">Email is locked. Change the login in the Supabase dashboard.</div>
-      <div class="admin-row">
-        <p-checkbox
-          [binary]="true"
-          [(ngModel)]="isAdmin"
-          (ngModelChange)="saveAdmin()"
-          inputId="is-admin"
-        />
-        <label for="is-admin">Admin</label>
-      </div>
-      <div class="admin-row">
-        <p-checkbox
-          [binary]="true"
-          [(ngModel)]="dataConfirmed"
-          (ngModelChange)="saveConfirmed()"
-          inputId="data-confirmed"
-        />
-        <label for="data-confirmed">Confirm data</label>
-      </div>
+      <div class="hint" *ngIf="uuid">Email is locked after a login is created.</div>
     </ng-container>
 
     <p-button
