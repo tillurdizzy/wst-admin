@@ -1,0 +1,91 @@
+<div class="elections-page">
+  <div class="toolbar card">
+    <div class="title-block">
+      <h2>Elections</h2>
+      <span class="row-count">{{ filtered.length }} of {{ rows.length }} owners</span>
+    </div>
+    <div class="toolbar-right">
+      <label>Search</label>
+      <input pInputText class="search-input" [(ngModel)]="search" (ngModelChange)="onSearch()" />
+      <label>Presets</label>
+      <p-select
+        [options]="presets"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="preset"
+        (ngModelChange)="onPreset()"
+        styleClass="preset-select"
+      />
+    </div>
+  </div>
+
+  <p class="load-error" *ngIf="loadError">{{ loadError }}</p>
+
+  <div class="card table-card">
+    <p-table
+      [value]="filtered"
+      [loading]="loading"
+      [scrollable]="true"
+      scrollHeight="300px"
+      dataKey="ownerId"
+      selectionMode="single"
+      [(selection)]="selected"
+      (onRowSelect)="onRowSelect($event)"
+      styleClass="p-datatable-sm elections-table"
+      [tableStyle]="{ width: '62rem', 'table-layout': 'fixed' }"
+    >
+      <ng-template #header>
+        <tr>
+          <th style="width: 16rem">Name</th>
+          <th style="width: 8rem">Unit</th>
+          <th style="width: 7rem">Vote</th>
+          <th style="width: 7rem">Proxy</th>
+          <th style="width: 16rem">Notes</th>
+          <th style="width: 8rem">Ballot</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-row>
+        <tr [pSelectableRow]="row">
+          <td>{{ row.name }}</td>
+          <td>{{ row.units }}</td>
+          <td>{{ row.vote }}</td>
+          <td>{{ row.proxy }}</td>
+          <td>{{ row.notes }}</td>
+          <td>{{ row.electionId ? 'On file' : 'None' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="6">No owners match the current search.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+    <p class="hint">Every owner is listed. Save creates a ballot if this owner does not have one yet.</p>
+  </div>
+
+  <section class="card selected" *ngIf="selected">
+    <h3>
+      {{ selected.name }} · Unit {{ selected.units || 'none' }}
+      <span class="hint" *ngIf="!selected.electionId"> — no ballot yet</span>
+    </h3>
+    <div class="edit-row">
+      <div class="field">
+        <label>Vote</label>
+        <p-select [options]="choices" optionLabel="label" optionValue="value" [(ngModel)]="vote" placeholder="—" />
+      </div>
+      <div class="field">
+        <label>Proxy</label>
+        <p-select [options]="choices" optionLabel="label" optionValue="value" [(ngModel)]="proxy" placeholder="—" />
+      </div>
+      <div class="field notes">
+        <label>Notes</label>
+        <textarea pTextarea [(ngModel)]="notes" rows="3"></textarea>
+      </div>
+      <p-button [label]="selected.electionId ? 'Save' : 'Create ballot'" [loading]="saving" (onClick)="save()" />
+    </div>
+    <p class="ok" *ngIf="message">{{ message }}</p>
+    <p class="err" *ngIf="error">{{ error }}</p>
+  </section>
+</div>
+
+<p-toast />
