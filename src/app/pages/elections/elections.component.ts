@@ -46,20 +46,30 @@ export class ElectionsComponent implements OnInit {
   filtered: ElectionRow[] = [];
   selected: ElectionRow | null = null;
   loading = false;
-  saving = false;
+  savingContact = false;
+  savingVote = false;
   loadError = '';
-  message = '';
+  contactMessage = '';
+  voteMessage = '';
   error = '';
   search = '';
 
   vote = '';
   proxy = '';
-  notes = '';
+  contactType = '';
+  contactNote = '';
 
   choices = [
     { label: 'Yes', value: 'Yes' },
     { label: 'No', value: 'No' },
     { label: 'Maybe', value: 'Maybe' },
+  ];
+
+  contactTypes = [
+    { label: 'Face to face', value: 'Face to face' },
+    { label: 'email', value: 'email' },
+    { label: 'text', value: 'text' },
+    { label: 'mail', value: 'mail' },
   ];
 
   presets = [
@@ -98,8 +108,10 @@ export class ElectionsComponent implements OnInit {
   private hydrate() {
     this.vote = this.selected?.vote ?? '';
     this.proxy = this.selected?.proxy ?? '';
-    this.notes = this.selected?.notes ?? '';
-    this.message = '';
+    this.contactType = '';
+    this.contactNote = '';
+    this.contactMessage = '';
+    this.voteMessage = '';
     this.error = '';
   }
 
@@ -129,8 +141,10 @@ export class ElectionsComponent implements OnInit {
     const byOwner = new Map<string, any>();
     const byUnit = new Map<number, any>();
     for (const ballot of ballotsRes.data ?? []) {
-      if (ballot.owner_id && !byOwner.has(ballot.owner_id)) byOwner.set(ballot.owner_id, ballot);
-      if (ballot.unit != null && !byUnit.has(ballot.unit)) byUnit.set(ballot.unit, ballot);
+      const prevOwner = ballot.owner_id ? byOwner.get(ballot.owner_id) : undefined;
+      if (ballot.owner_id && (!prevOwner || ballot.id > prevOwner.id)) byOwner.set(ballot.owner_id, ballot);
+      const prevUnit = ballot.unit != null ? byUnit.get(ballot.unit) : undefined;
+      if (ballot.unit != null && (!prevUnit || ballot.id > prevUnit.id)) byUnit.set(ballot.unit, ballot);
     }
 
     this.rows = (ownersRes.data ?? []).map((owner: any) => {
@@ -154,7 +168,6 @@ export class ElectionsComponent implements OnInit {
     this.applyFilters();
     if (this.selected) {
       this.selected = this.rows.find((r) => r.ownerId === this.selected!.ownerId) ?? null;
-      if (this.selected) this.hydrate();
     }
   }
 
@@ -189,30 +202,68 @@ export class ElectionsComponent implements OnInit {
     }
   }
 
-  async save() {
-    if (!this.selected?.electionId) {
+  async saveContact() {
+    if (!this.selected) return;
+    if (!this.selected.electionId) {
       this.error = 'No ballot row for this owner. Run the seed script.';
       return;
     }
-    this.saving = true;
+    if (!this.contactType || !this.contactNote.trim()) {
+      this.error = 'Contact type and a note are required.';
+      return;
+    }
+    this.savingContact = true;
     this.error = '';
-    this.message = '';
+    this.contactMessage = '';
+    const entry = [
+      `Date: ${this.formatDate(new Date())}`,
+      `User: ${this.supabase.user()?.email || 'unknown'}`,
+      `Type: ${this.contactType}`,
+      `Note: ${this.contactNote.trim()}`,
+    ].join('\n');
+    const existing = (this.selected.notes ?? '').trim();
+    const notes = existing ? `${existing}\n\n${entry}` : entry;
+    const { error } = await this.supabase.client
+      .from('election')
+      .update({ notes })
+      .eq('id', this.selected.electionId);
+    this.savingContact = false;
+    if (error) {
+      this.error = error.message;
+      return;
+    }
+    this.contactType = '';
+    this.contactNote = '';
+    this.contactMessage = 'Contact added.';
+    await this.load();
+  }
+
+  async saveVote() {
+    if (!this.selected) return;
+    if (!this.selected.electionId) {
+      this.error = 'No ballot row for this owner. Run the seed script.';
+      return;
+    }
+    this.savingVote = true;
+    this.error = '';
+    this.voteMessage = '';
     const { error } = await this.supabase.client
       .from('election')
       .update({
         vote: this.vote || null,
         proxy: this.proxy || null,
-        notes: this.notes.trim() || null,
-        owner_id: this.selected.ownerId,
-        unit: this.selected.unit,
       })
       .eq('id', this.selected.electionId);
-    this.saving = false;
+    this.savingVote = false;
     if (error) {
       this.error = error.message;
       return;
     }
-    this.message = 'Saved.';
+    this.voteMessage = 'Saved.';
     await this.load();
+  }
+
+  private formatDate(date: Date) {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 }

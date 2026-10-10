@@ -60,30 +60,42 @@
         </tr>
       </ng-template>
     </p-table>
-    <p class="hint">Every owner is listed. Save creates a ballot if this owner does not have one yet.</p>
   </div>
 
   <section class="card selected" *ngIf="selected">
-    <h3>
-      {{ selected.name }} · Unit {{ selected.units || 'none' }}
-      <span class="hint" *ngIf="!selected.electionId"> — no ballot yet</span>
-    </h3>
-    <div class="edit-row">
-      <div class="field">
-        <label>Vote</label>
-        <p-select [options]="choices" optionLabel="label" optionValue="value" [(ngModel)]="vote" placeholder="—" />
-      </div>
-      <div class="field">
-        <label>Proxy</label>
-        <p-select [options]="choices" optionLabel="label" optionValue="value" [(ngModel)]="proxy" placeholder="—" />
-      </div>
-      <div class="field notes">
+    <h3>{{ selected.name }} · Unit {{ selected.units || 'none' }}</h3>
+    <div class="panel-grid">
+      <div class="col">
+        <div class="col-title">Contact Summary</div>
+        <label>Contact Type</label>
+        <p-select
+          [options]="contactTypes"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="contactType"
+          placeholder="Select"
+        />
         <label>Notes</label>
-        <textarea pTextarea [(ngModel)]="notes" rows="3"></textarea>
+        <textarea pTextarea [(ngModel)]="contactNote" rows="5"></textarea>
+        <p-button label="Submit" [loading]="savingContact" (onClick)="saveContact()" />
+        <p class="ok" *ngIf="contactMessage">{{ contactMessage }}</p>
       </div>
-      <p-button [label]="selected.electionId ? 'Save' : 'Create ballot'" [loading]="saving" (onClick)="save()" />
+
+      <div class="col">
+        <div class="col-title">Vote Prediction</div>
+        <label>Will vote for new board?</label>
+        <p-select [options]="choices" optionLabel="label" optionValue="value" [(ngModel)]="vote" placeholder="—" />
+        <label>Will give proxy?</label>
+        <p-select [options]="choices" optionLabel="label" optionValue="value" [(ngModel)]="proxy" placeholder="—" />
+        <p-button label="Submit" [loading]="savingVote" (onClick)="saveVote()" />
+        <p class="ok" *ngIf="voteMessage">{{ voteMessage }}</p>
+      </div>
+
+      <div class="col history">
+        <div class="col-title">Contact History</div>
+        <textarea pTextarea [ngModel]="selected.notes || ''" rows="12" readonly></textarea>
+      </div>
     </div>
-    <p class="ok" *ngIf="message">{{ message }}</p>
     <p class="err" *ngIf="error">{{ error }}</p>
   </section>
 </div>
