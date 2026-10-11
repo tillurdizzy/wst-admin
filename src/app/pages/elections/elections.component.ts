@@ -70,6 +70,7 @@ export class ElectionsComponent implements OnInit {
     { label: 'email', value: 'email' },
     { label: 'text', value: 'text' },
     { label: 'mail', value: 'mail' },
+    { label: 'note', value: 'note' },
   ];
 
   presets = [
