@@ -84,6 +84,7 @@
         (onClick)="saveEmailAndAuth()"
       />
       <div class="hint" *ngIf="uuid">Email is locked after a login is created.</div>
+      <div class="uuid-line" *ngIf="uuid">UUID: {{ uuid }}</div>
     </ng-container>
 
     <p-button

@@ -98,3 +98,10 @@
   flex-wrap: wrap;
   gap: 0.55rem 0.7rem;
 }
+
+.uuid-line {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+  word-break: break-all;
+  margin-top: 0.25rem;
+}
