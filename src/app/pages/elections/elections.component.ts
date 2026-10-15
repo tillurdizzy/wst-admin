@@ -6,6 +6,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { TextareaModule } from 'primeng/textarea';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SupabaseService } from '../../services/supabase.service';
@@ -21,7 +22,6 @@ export interface ElectionRow {
   created_at: string | null;
   notes: string | null;
   vote: string | null;
-  proxy: string | null;
 }
 
 @Component({
@@ -35,6 +35,7 @@ export interface ElectionRow {
     SelectModule,
     ButtonModule,
     TextareaModule,
+    CheckboxModule,
     ToastModule,
   ],
   templateUrl: './elections.component.html',
@@ -55,29 +56,31 @@ export class ElectionsComponent implements OnInit {
   search = '';
 
   vote = '';
-  proxy = '';
-  contactType = '';
   contactNote = '';
+  flags: Record<string, boolean> = {};
 
-  choices = [
-    { label: 'Yes', value: 'Yes' },
-    { label: 'No', value: 'No' },
-    { label: 'Maybe', value: 'Maybe' },
+  contactFlags = [
+    'No Answer',
+    'Hostile',
+    'Not interested',
+    'Somewhat interested',
+    'Very interested',
+    'Gave flyer',
+    'Send WhatsApp invite',
+    'Corrected info',
   ];
 
-  contactTypes = [
-    { label: 'Face to face', value: 'Face to face' },
-    { label: 'email', value: 'email' },
-    { label: 'text', value: 'text' },
-    { label: 'mail', value: 'mail' },
-    { label: 'note', value: 'note' },
+  voteChoices = [
+    { label: 'FOR in person', value: 'FOR in person' },
+    { label: 'FOR by proxy', value: 'FOR by proxy' },
+    { label: 'Quorum Only', value: 'Quorum Only' },
+    { label: 'AGAINST', value: 'AGAINST' },
   ];
 
   presets = [
     { label: 'All owners', value: 'all' },
     { label: 'No ballot yet', value: 'none' },
     { label: 'Sort by vote', value: 'sortvote' },
-    { label: 'Sort by proxy', value: 'sortproxy' },
     { label: 'Sort by unit', value: 'sortunit' },
   ];
   preset = 'all';
@@ -85,7 +88,9 @@ export class ElectionsComponent implements OnInit {
   constructor(
     private supabase: SupabaseService,
     private messages: MessageService
-  ) {}
+  ) {
+    this.clearFlags();
+  }
 
   async ngOnInit() {
     await this.load();
@@ -106,11 +111,15 @@ export class ElectionsComponent implements OnInit {
     this.hydrate();
   }
 
+  private clearFlags() {
+    this.flags = {};
+    for (const flag of this.contactFlags) this.flags[flag] = false;
+  }
+
   private hydrate() {
     this.vote = this.selected?.vote ?? '';
-    this.proxy = this.selected?.proxy ?? '';
-    this.contactType = '';
     this.contactNote = '';
+    this.clearFlags();
     this.contactMessage = '';
     this.voteMessage = '';
     this.error = '';
@@ -122,7 +131,7 @@ export class ElectionsComponent implements OnInit {
     const [ownersRes, linksRes, ballotsRes] = await Promise.all([
       this.supabase.client.from('owners').select('owner_id, firstname, lastname, email, cell'),
       this.supabase.client.from('unit_owners').select('unit, owner_id'),
-      this.supabase.client.from('election').select('id, created_at, name, unit, notes, vote, proxy, owner_id'),
+      this.supabase.client.from('election').select('id, created_at, name, unit, notes, vote, owner_id'),
     ]);
     this.loading = false;
     if (ownersRes.error) {
@@ -162,7 +171,6 @@ export class ElectionsComponent implements OnInit {
         created_at: ballot?.created_at ?? null,
         notes: ballot?.notes ?? null,
         vote: ballot?.vote ?? null,
-        proxy: ballot?.proxy ?? null,
       } as ElectionRow;
     });
 
@@ -181,21 +189,16 @@ export class ElectionsComponent implements OnInit {
         row.units.includes(q) ||
         row.name.toLowerCase().includes(q) ||
         (row.vote ?? '').toLowerCase().includes(q) ||
-        (row.proxy ?? '').toLowerCase().includes(q) ||
         (row.notes ?? '').toLowerCase().includes(q)
       );
     });
     const rank = (value: string | null) => {
-      const v = (value ?? '').toLowerCase();
-      if (v === 'yes') return 0;
-      if (v === 'maybe') return 1;
-      if (v === 'no') return 2;
-      return 3;
+      const order = ['for in person', 'for by proxy', 'quorum only', 'against'];
+      const i = order.indexOf((value ?? '').toLowerCase());
+      return i === -1 ? 9 : i;
     };
     if (this.preset === 'sortvote') {
       this.filtered.sort((a, b) => rank(a.vote) - rank(b.vote) || (a.unit ?? 9999) - (b.unit ?? 9999));
-    } else if (this.preset === 'sortproxy') {
-      this.filtered.sort((a, b) => rank(a.proxy) - rank(b.proxy) || (a.unit ?? 9999) - (b.unit ?? 9999));
     } else if (this.preset === 'sortunit') {
       this.filtered.sort((a, b) => (a.unit ?? 9999) - (b.unit ?? 9999));
     } else {
@@ -209,19 +212,21 @@ export class ElectionsComponent implements OnInit {
       this.error = 'No ballot row for this owner. Run the seed script.';
       return;
     }
-    if (!this.contactType || !this.contactNote.trim()) {
-      this.error = 'Contact type and a note are required.';
+    const checked = this.contactFlags.filter((flag) => this.flags[flag]);
+    if (!checked.length && !this.contactNote.trim()) {
+      this.error = 'Check at least one item or enter a note.';
       return;
     }
     this.savingContact = true;
     this.error = '';
     this.contactMessage = '';
-    const entry = [
+    const lines = [
       `Date: ${this.formatDate(new Date())}`,
       `User: ${this.supabase.user()?.email || 'unknown'}`,
-      `Type: ${this.contactType}`,
-      `Note: ${this.contactNote.trim()}`,
-    ].join('\n');
+    ];
+    if (checked.length) lines.push(`Flags: ${checked.join(', ')}`);
+    if (this.contactNote.trim()) lines.push(`Note: ${this.contactNote.trim()}`);
+    const entry = lines.join('\n');
     const existing = (this.selected.notes ?? '').trim();
     const notes = existing ? `${existing}\n\n${entry}` : entry;
     const { error } = await this.supabase.client
@@ -233,8 +238,8 @@ export class ElectionsComponent implements OnInit {
       this.error = error.message;
       return;
     }
-    this.contactType = '';
     this.contactNote = '';
+    this.clearFlags();
     this.contactMessage = 'Contact added.';
     await this.load();
   }
@@ -250,10 +255,7 @@ export class ElectionsComponent implements OnInit {
     this.voteMessage = '';
     const { error } = await this.supabase.client
       .from('election')
-      .update({
-        vote: this.vote || null,
-        proxy: this.proxy || null,
-      })
+      .update({ vote: this.vote || null })
       .eq('id', this.selected.electionId);
     this.savingVote = false;
     if (error) {

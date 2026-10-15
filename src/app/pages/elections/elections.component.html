@@ -26,22 +26,20 @@
       [value]="filtered"
       [loading]="loading"
       [scrollable]="true"
-      scrollHeight="300px"
+      scrollHeight="280px"
       dataKey="ownerId"
       selectionMode="single"
       [(selection)]="selected"
       (onRowSelect)="onRowSelect($event)"
       styleClass="p-datatable-sm elections-table"
-      [tableStyle]="{ width: '62rem', 'table-layout': 'fixed' }"
+      [tableStyle]="{ width: '56rem', 'table-layout': 'fixed' }"
     >
       <ng-template #header>
         <tr>
           <th style="width: 16rem">Name</th>
           <th style="width: 8rem">Unit</th>
-          <th style="width: 7rem">Vote</th>
-          <th style="width: 7rem">Proxy</th>
-          <th style="width: 16rem">Notes</th>
-          <th style="width: 8rem">Ballot</th>
+          <th style="width: 14rem">Intends to vote</th>
+          <th style="width: 18rem">Notes</th>
         </tr>
       </ng-template>
       <ng-template #body let-row>
@@ -49,14 +47,12 @@
           <td>{{ row.name }}</td>
           <td>{{ row.units }}</td>
           <td>{{ row.vote }}</td>
-          <td>{{ row.proxy }}</td>
           <td>{{ row.notes }}</td>
-          <td>{{ row.electionId ? 'On file' : 'None' }}</td>
         </tr>
       </ng-template>
       <ng-template #emptymessage>
         <tr>
-          <td colspan="6">No owners match the current search.</td>
+          <td colspan="4">No owners match the current search.</td>
         </tr>
       </ng-template>
     </p-table>
@@ -65,35 +61,38 @@
   <section class="card selected" *ngIf="selected">
     <h3>{{ selected.name }} · Unit {{ selected.units || 'none' }}</h3>
     <div class="panel-grid">
-      <div class="col">
+      <div class="col flags">
         <div class="col-title">Contact Summary</div>
-        <label>Contact Type</label>
-        <p-select
-          [options]="contactTypes"
-          optionLabel="label"
-          optionValue="value"
-          [(ngModel)]="contactType"
-          placeholder="Select"
-        />
-        <label>Notes</label>
-        <textarea pTextarea [(ngModel)]="contactNote" rows="5"></textarea>
+        <label class="flag" *ngFor="let flag of contactFlags">
+          <p-checkbox [binary]="true" [(ngModel)]="flags[flag]" [inputId]="'flag-' + flag" />
+          <span>{{ flag }}</span>
+        </label>
+      </div>
+
+      <div class="col">
+        <div class="col-title">Notes</div>
+        <textarea pTextarea [(ngModel)]="contactNote" rows="8"></textarea>
         <p-button label="Submit" [loading]="savingContact" (onClick)="saveContact()" />
         <p class="ok" *ngIf="contactMessage">{{ contactMessage }}</p>
       </div>
 
       <div class="col">
         <div class="col-title">Vote Prediction</div>
-        <label>Will vote for new board?</label>
-        <p-select [options]="choices" optionLabel="label" optionValue="value" [(ngModel)]="vote" placeholder="—" />
-        <label>Will give proxy?</label>
-        <p-select [options]="choices" optionLabel="label" optionValue="value" [(ngModel)]="proxy" placeholder="—" />
+        <label>Intends to vote:</label>
+        <p-select
+          [options]="voteChoices"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="vote"
+          placeholder="Select"
+        />
         <p-button label="Submit" [loading]="savingVote" (onClick)="saveVote()" />
         <p class="ok" *ngIf="voteMessage">{{ voteMessage }}</p>
       </div>
 
       <div class="col history">
         <div class="col-title">Contact History</div>
-        <textarea pTextarea [ngModel]="selected.notes || ''" rows="12" readonly></textarea>
+        <textarea pTextarea [ngModel]="selected.notes || ''" rows="10" readonly></textarea>
       </div>
     </div>
     <p class="err" *ngIf="error">{{ error }}</p>
