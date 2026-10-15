@@ -22,6 +22,7 @@ export interface ElectionRow {
   created_at: string | null;
   notes: string | null;
   vote: string | null;
+  proxy: string | null;
 }
 
 @Component({
@@ -57,6 +58,7 @@ export class ElectionsComponent implements OnInit {
   votingFor = '0.0';
 
   vote = '';
+  proxyCollected = false;
   contactNote = '';
   flags: Record<string, boolean> = {};
 
@@ -119,6 +121,7 @@ export class ElectionsComponent implements OnInit {
 
   private hydrate() {
     this.vote = this.selected?.vote ?? '';
+    this.proxyCollected = (this.selected?.proxy ?? '').toUpperCase() === 'YES';
     this.contactNote = '';
     this.clearFlags();
     this.contactMessage = '';
@@ -134,6 +137,7 @@ export class ElectionsComponent implements OnInit {
       this.supabase.client.from('unit_owners').select('unit, owner_id'),
       this.supabase.client.from('election').select('id, created_at, name, unit, notes, vote, owner_id'),
       this.supabase.client.from('units').select('unit, share'),
+      this.supabase.client.from('election').select('id, created_at, name, unit, notes, vote, proxy, owner_id'),
     ]);
     this.loading = false;
     if (ownersRes.error) {
@@ -173,6 +177,7 @@ export class ElectionsComponent implements OnInit {
         created_at: ballot?.created_at ?? null,
         notes: ballot?.notes ?? null,
         vote: ballot?.vote ?? null,
+        proxy: ballot?.proxy ?? null,
       } as ElectionRow;
     });
 
@@ -282,7 +287,10 @@ export class ElectionsComponent implements OnInit {
     this.voteMessage = '';
     const { error } = await this.supabase.client
       .from('election')
-      .update({ vote: this.vote || null })
+      .update({
+        vote: this.vote || null,
+        proxy: this.proxyCollected ? 'YES' : null,
+      })
       .eq('id', this.selected.electionId);
     this.savingVote = false;
     if (error) {

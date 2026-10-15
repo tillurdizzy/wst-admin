@@ -88,6 +88,10 @@
           placeholder="Select"
         />
         <p-button label="Submit" [loading]="savingVote" (onClick)="saveVote()" />
+        <label class="flag">
+          <p-checkbox [binary]="true" [(ngModel)]="proxyCollected" inputId="proxy-collected" />
+          <span>Proxy collected</span>
+        </label>
         <p class="ok" *ngIf="voteMessage">{{ voteMessage }}</p>
       </div>
 
