@@ -54,6 +54,7 @@ export class ElectionsComponent implements OnInit {
   voteMessage = '';
   error = '';
   search = '';
+  votingFor = '0.0';
 
   vote = '';
   contactNote = '';
@@ -128,10 +129,11 @@ export class ElectionsComponent implements OnInit {
   async load() {
     this.loading = true;
     this.loadError = '';
-    const [ownersRes, linksRes, ballotsRes] = await Promise.all([
+    const [ownersRes, linksRes, ballotsRes, unitsRes] = await Promise.all([
       this.supabase.client.from('owners').select('owner_id, firstname, lastname, email, cell'),
       this.supabase.client.from('unit_owners').select('unit, owner_id'),
       this.supabase.client.from('election').select('id, created_at, name, unit, notes, vote, owner_id'),
+      this.supabase.client.from('units').select('unit, share'),
     ]);
     this.loading = false;
     if (ownersRes.error) {
@@ -175,9 +177,34 @@ export class ElectionsComponent implements OnInit {
     });
 
     this.applyFilters();
+    this.votingFor = this.calcVotingFor(unitsRes.data ?? [], unitsByOwner);
     if (this.selected) {
       this.selected = this.rows.find((r) => r.ownerId === this.selected!.ownerId) ?? null;
     }
+  }
+
+  private calcVotingFor(
+    unitRows: { unit: number; share: number | string | null }[],
+    unitsByOwner: Map<string, number[]>
+  ) {
+    const shareByUnit = new Map<number, number>();
+    let total = 0;
+    for (const row of unitRows) {
+      const share = Number(row.share);
+      if (!Number.isFinite(share) || share <= 0) continue;
+      shareByUnit.set(row.unit, share);
+      total += share;
+    }
+    if (!total) return '0.0';
+
+    const forUnits = new Set<number>();
+    for (const owner of this.rows) {
+      if (!(owner.vote ?? '').toUpperCase().includes('FOR')) continue;
+      for (const unit of unitsByOwner.get(owner.ownerId) ?? []) forUnits.add(unit);
+    }
+    let forShare = 0;
+    for (const unit of forUnits) forShare += shareByUnit.get(unit) ?? 0;
+    return ((forShare / total) * 100).toFixed(1);
   }
 
   applyFilters() {
