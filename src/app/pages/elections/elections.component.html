@@ -33,14 +33,15 @@
       [(selection)]="selected"
       (onRowSelect)="onRowSelect($event)"
       styleClass="p-datatable-sm elections-table"
-      [tableStyle]="{ width: '56rem', 'table-layout': 'fixed' }"
+      [tableStyle]="{ width: '58rem', 'table-layout': 'fixed' }"
     >
       <ng-template #header>
         <tr>
           <th style="width: 16rem">Name</th>
           <th style="width: 8rem">Unit</th>
           <th style="width: 14rem">Intends to vote</th>
-          <th style="width: 18rem">Notes</th>
+          <th style="width: 6rem">Group</th>
+          <th style="width: 6rem">Proxy</th>
         </tr>
       </ng-template>
       <ng-template #body let-row>
@@ -48,12 +49,13 @@
           <td>{{ row.name }}</td>
           <td>{{ row.units }}</td>
           <td>{{ row.vote }}</td>
-          <td>{{ row.notes }}</td>
+          <td>{{ row.group }}</td>
+          <td>{{ row.proxy }}</td>
         </tr>
       </ng-template>
       <ng-template #emptymessage>
         <tr>
-          <td colspan="4">No owners match the current search.</td>
+          <td colspan="5">No owners match the current search.</td>
         </tr>
       </ng-template>
     </p-table>
@@ -93,6 +95,20 @@
           <span>Proxy collected</span>
         </label>
         <p class="ok" *ngIf="voteMessage">{{ voteMessage }}</p>
+      </div>
+
+      <div class="col">
+        <div class="col-title">Canvas Group</div>
+        <label>Group</label>
+        <p-select
+          [options]="groupChoices"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="canvasGroup"
+          placeholder="Select"
+        />
+        <p-button label="Submit" [loading]="savingGroup" (onClick)="saveGroup()" />
+        <p class="ok" *ngIf="groupMessage">{{ groupMessage }}</p>
       </div>
 
       <div class="col history">

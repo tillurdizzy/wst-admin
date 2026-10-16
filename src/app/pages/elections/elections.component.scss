@@ -136,3 +136,14 @@ h2 {
   font-weight: 600;
   margin-left: 0.75rem;
 }
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: 12rem 14rem 12rem 12rem minmax(0, 1fr);
+  gap: 0;
+}
+
+:host ::ng-deep .elections-table .p-datatable-table {
+  table-layout: fixed;
+  width: 58rem;
+}

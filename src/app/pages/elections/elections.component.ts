@@ -23,6 +23,7 @@ export interface ElectionRow {
   notes: string | null;
   vote: string | null;
   proxy: string | null;
+  group: string | null;
 }
 
 @Component({
@@ -50,15 +51,18 @@ export class ElectionsComponent implements OnInit {
   loading = false;
   savingContact = false;
   savingVote = false;
+  savingGroup = false;
   loadError = '';
   contactMessage = '';
   voteMessage = '';
+  groupMessage = '';
   error = '';
   search = '';
   votingFor = '0.0';
 
   vote = '';
   proxyCollected = false;
+  canvasGroup = '';
   contactNote = '';
   flags: Record<string, boolean> = {};
 
@@ -80,11 +84,14 @@ export class ElectionsComponent implements OnInit {
     { label: 'AGAINST', value: 'AGAINST' },
   ];
 
+  groupChoices = ['A', 'B', 'C', 'D', 'E', 'F'].map((g) => ({ label: g, value: g }));
+
   presets = [
     { label: 'All owners', value: 'all' },
     { label: 'No ballot yet', value: 'none' },
     { label: 'Sort by vote', value: 'sortvote' },
     { label: 'Sort by unit', value: 'sortunit' },
+    { label: 'Sort by group', value: 'sortgroup' },
   ];
   preset = 'all';
 
@@ -122,10 +129,12 @@ export class ElectionsComponent implements OnInit {
   private hydrate() {
     this.vote = this.selected?.vote ?? '';
     this.proxyCollected = (this.selected?.proxy ?? '').toUpperCase() === 'YES';
+    this.canvasGroup = this.selected?.group ?? '';
     this.contactNote = '';
     this.clearFlags();
     this.contactMessage = '';
     this.voteMessage = '';
+    this.groupMessage = '';
     this.error = '';
   }
 
@@ -135,9 +144,8 @@ export class ElectionsComponent implements OnInit {
     const [ownersRes, linksRes, ballotsRes, unitsRes] = await Promise.all([
       this.supabase.client.from('owners').select('owner_id, firstname, lastname, email, cell'),
       this.supabase.client.from('unit_owners').select('unit, owner_id'),
-      this.supabase.client.from('election').select('id, created_at, name, unit, notes, vote, owner_id'),
+      this.supabase.client.from('election').select('id, created_at, name, unit, notes, vote, proxy, "group", owner_id'),
       this.supabase.client.from('units').select('unit, share'),
-      this.supabase.client.from('election').select('id, created_at, name, unit, notes, vote, proxy, owner_id'),
     ]);
     this.loading = false;
     if (ownersRes.error) {
@@ -178,6 +186,7 @@ export class ElectionsComponent implements OnInit {
         notes: ballot?.notes ?? null,
         vote: ballot?.vote ?? null,
         proxy: ballot?.proxy ?? null,
+        group: ballot?.group ?? null,
       } as ElectionRow;
     });
 
@@ -221,6 +230,7 @@ export class ElectionsComponent implements OnInit {
         row.units.includes(q) ||
         row.name.toLowerCase().includes(q) ||
         (row.vote ?? '').toLowerCase().includes(q) ||
+        (row.group ?? '').toLowerCase().includes(q) ||
         (row.notes ?? '').toLowerCase().includes(q)
       );
     });
@@ -233,6 +243,11 @@ export class ElectionsComponent implements OnInit {
       this.filtered.sort((a, b) => rank(a.vote) - rank(b.vote) || (a.unit ?? 9999) - (b.unit ?? 9999));
     } else if (this.preset === 'sortunit') {
       this.filtered.sort((a, b) => (a.unit ?? 9999) - (b.unit ?? 9999));
+    } else if (this.preset === 'sortgroup') {
+      this.filtered.sort(
+        (a, b) =>
+          (a.group ?? 'ZZZ').localeCompare(b.group ?? 'ZZZ') || (a.unit ?? 9999) - (b.unit ?? 9999)
+      );
     } else {
       this.filtered.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
     }
@@ -298,6 +313,28 @@ export class ElectionsComponent implements OnInit {
       return;
     }
     this.voteMessage = 'Saved.';
+    await this.load();
+  }
+
+  async saveGroup() {
+    if (!this.selected) return;
+    if (!this.selected.electionId) {
+      this.error = 'No ballot row for this owner. Run the seed script.';
+      return;
+    }
+    this.savingGroup = true;
+    this.error = '';
+    this.groupMessage = '';
+    const { error } = await this.supabase.client
+      .from('election')
+      .update({ group: this.canvasGroup || null })
+      .eq('id', this.selected.electionId);
+    this.savingGroup = false;
+    if (error) {
+      this.error = error.message;
+      return;
+    }
+    this.groupMessage = 'Saved.';
     await this.load();
   }
 
