@@ -67,15 +67,14 @@ export class ElectionsComponent implements OnInit {
   flags: Record<string, boolean> = {};
 
   contactFlags = [
-    'No Answer',
-    'Hostile',
-    'Not interested',
-    'Somewhat interested',
-    'Very interested',
-    'Gave flyer',
-    'Send WhatsApp invite',
-    'Corrected info',
-  ];
+  'No Answer',
+  'Hostile (Against us)',
+  'Indifferent',
+  'Ally (For us)',
+  'Gave flyer',
+  'Send WhatsApp invite',
+  'Corrected info',
+];
 
   voteChoices = [
     { label: 'FOR in person', value: 'FOR in person' },
