@@ -66,15 +66,15 @@ export class ElectionsComponent implements OnInit {
   contactNote = '';
   flags: Record<string, boolean> = {};
 
-  contactFlags = [
-  'No Answer',
-  'Hostile (Against us)',
-  'Indifferent',
-  'Ally (For us)',
-  'Gave flyer',
-  'Send WhatsApp invite',
-  'Corrected info',
-];
+   contactFlags = [
+    'Gave Booklet',
+    'Try again later',
+    'FOR Us - Vote in person',
+    'FOR Us - Proxy promised',
+    'Proxy collected',
+    'AGAINST Us',
+    'Reset',
+  ];
 
   voteChoices = [
     { label: 'FOR in person', value: 'FOR in person' },
@@ -83,7 +83,7 @@ export class ElectionsComponent implements OnInit {
     { label: 'AGAINST', value: 'AGAINST' },
   ];
 
-  groupChoices = ['A', 'B', 'C', 'D', 'E', 'F'].map((g) => ({ label: g, value: g }));
+    groupChoices = ['Primary', 'Mail'].map((g) => ({ label: g, value: g }));
 
   presets = [
     { label: 'All owners', value: 'all' },
