@@ -71,7 +71,7 @@ h2 {
 
 .panel-grid {
   display: grid;
-  grid-template-columns: 13rem 16rem 14rem minmax(0, 1fr);
+  grid-template-columns: 15rem 16rem 10rem minmax(0, 1fr);
   gap: 0;
 }
 
@@ -121,7 +121,7 @@ h2 {
 
 :host ::ng-deep .elections-table .p-datatable-table {
   table-layout: fixed;
-  width: 56rem;
+  width: 52rem;
 }
 
 :host ::ng-deep .elections-table .p-datatable-thead > tr > th,

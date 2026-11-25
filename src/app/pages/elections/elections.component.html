@@ -33,15 +33,15 @@
       [(selection)]="selected"
       (onRowSelect)="onRowSelect($event)"
       styleClass="p-datatable-sm elections-table"
-      [tableStyle]="{ width: '58rem', 'table-layout': 'fixed' }"
+      [tableStyle]="{ width: '52rem', 'table-layout': 'fixed' }"
     >
       <ng-template #header>
         <tr>
           <th style="width: 16rem">Name</th>
           <th style="width: 8rem">Unit</th>
-          <th style="width: 14rem">Intends to vote</th>
-          <th style="width: 6rem">Group</th>
-          <th style="width: 6rem">Proxy</th>
+          <th style="width: 10rem">Vote</th>
+          <th style="width: 8rem">Proxy</th>
+          <th style="width: 8rem">Group</th>
         </tr>
       </ng-template>
       <ng-template #body let-row>
@@ -49,8 +49,8 @@
           <td>{{ row.name }}</td>
           <td>{{ row.units }}</td>
           <td>{{ row.vote }}</td>
-          <td>{{ row.group }}</td>
           <td>{{ row.proxy }}</td>
+          <td>{{ row.group }}</td>
         </tr>
       </ng-template>
       <ng-template #emptymessage>
@@ -67,7 +67,7 @@
       <div class="col flags">
         <div class="col-title">Contact Summary</div>
         <label class="flag" *ngFor="let flag of contactFlags">
-          <p-checkbox [binary]="true" [(ngModel)]="flags[flag]" [inputId]="'flag-' + flag" />
+          <p-radiobutton [name]="'status-' + selected.ownerId" [value]="flag" [(ngModel)]="contactChoice" [inputId]="'flag-' + flag" />
           <span>{{ flag }}</span>
         </label>
       </div>
@@ -77,24 +77,6 @@
         <textarea pTextarea [(ngModel)]="contactNote" rows="8"></textarea>
         <p-button label="Submit" [loading]="savingContact" (onClick)="saveContact()" />
         <p class="ok" *ngIf="contactMessage">{{ contactMessage }}</p>
-      </div>
-
-      <div class="col">
-        <div class="col-title">Vote Prediction</div>
-        <label>Intends to vote:</label>
-        <p-select
-          [options]="voteChoices"
-          optionLabel="label"
-          optionValue="value"
-          [(ngModel)]="vote"
-          placeholder="Select"
-        />
-        <p-button label="Submit" [loading]="savingVote" (onClick)="saveVote()" />
-        <label class="flag">
-          <p-checkbox [binary]="true" [(ngModel)]="proxyCollected" inputId="proxy-collected" />
-          <span>Proxy collected</span>
-        </label>
-        <p class="ok" *ngIf="voteMessage">{{ voteMessage }}</p>
       </div>
 
       <div class="col">

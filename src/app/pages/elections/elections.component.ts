@@ -6,7 +6,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { TextareaModule } from 'primeng/textarea';
-import { CheckboxModule } from 'primeng/checkbox';
+import { RadioButtonModule } from 'primeng/radiobutton';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SupabaseService } from '../../services/supabase.service';
@@ -37,7 +37,7 @@ export interface ElectionRow {
     SelectModule,
     ButtonModule,
     TextareaModule,
-    CheckboxModule,
+    RadioButtonModule,
     ToastModule,
   ],
   templateUrl: './elections.component.html',
@@ -50,40 +50,29 @@ export class ElectionsComponent implements OnInit {
   selected: ElectionRow | null = null;
   loading = false;
   savingContact = false;
-  savingVote = false;
   savingGroup = false;
   loadError = '';
   contactMessage = '';
-  voteMessage = '';
   groupMessage = '';
   error = '';
   search = '';
   votingFor = '0.0';
 
-  vote = '';
-  proxyCollected = false;
   canvasGroup = '';
   contactNote = '';
-  flags: Record<string, boolean> = {};
+  contactChoice: string | null = null;
 
-   contactFlags = [
-    'Gave Booklet',
+  contactFlags = [
+    'Gave booklet',
     'Try again later',
-    'FOR Us - Vote in person',
-    'FOR Us - Proxy promised',
+    'FOR Us - No Action Needed',
+    'FOR Us - Needs follow up',
     'Proxy collected',
     'AGAINST Us',
     'Reset',
   ];
 
-  voteChoices = [
-    { label: 'FOR in person', value: 'FOR in person' },
-    { label: 'FOR by proxy', value: 'FOR by proxy' },
-    { label: 'Quorum Only', value: 'Quorum Only' },
-    { label: 'AGAINST', value: 'AGAINST' },
-  ];
-
-    groupChoices = ['Primary', 'Mail'].map((g) => ({ label: g, value: g }));
+  groupChoices = ['Primary', 'Mail'].map((g) => ({ label: g, value: g }));
 
   presets = [
     { label: 'All owners', value: 'all' },
@@ -97,9 +86,7 @@ export class ElectionsComponent implements OnInit {
   constructor(
     private supabase: SupabaseService,
     private messages: MessageService
-  ) {
-    this.clearFlags();
-  }
+  ) {}
 
   async ngOnInit() {
     await this.load();
@@ -120,19 +107,11 @@ export class ElectionsComponent implements OnInit {
     this.hydrate();
   }
 
-  private clearFlags() {
-    this.flags = {};
-    for (const flag of this.contactFlags) this.flags[flag] = false;
-  }
-
   private hydrate() {
-    this.vote = this.selected?.vote ?? '';
-    this.proxyCollected = (this.selected?.proxy ?? '').toUpperCase() === 'YES';
     this.canvasGroup = this.selected?.group ?? '';
     this.contactNote = '';
-    this.clearFlags();
+    this.contactChoice = this.choiceFromRow(this.selected?.vote ?? null, this.selected?.proxy ?? null);
     this.contactMessage = '';
-    this.voteMessage = '';
     this.groupMessage = '';
     this.error = '';
   }
@@ -234,9 +213,10 @@ export class ElectionsComponent implements OnInit {
       );
     });
     const rank = (value: string | null) => {
-      const order = ['for in person', 'for by proxy', 'quorum only', 'against'];
-      const i = order.indexOf((value ?? '').toLowerCase());
-      return i === -1 ? 9 : i;
+      const v = (value ?? '').toUpperCase();
+      if (v === 'FOR' || v.includes('FOR')) return 0;
+      if (v === 'AGAINST') return 1;
+      return 9;
     };
     if (this.preset === 'sortvote') {
       this.filtered.sort((a, b) => rank(a.vote) - rank(b.vote) || (a.unit ?? 9999) - (b.unit ?? 9999));
@@ -258,9 +238,8 @@ export class ElectionsComponent implements OnInit {
       this.error = 'No ballot row for this owner. Run the seed script.';
       return;
     }
-    const checked = this.contactFlags.filter((flag) => this.flags[flag]);
-    if (!checked.length && !this.contactNote.trim()) {
-      this.error = 'Check at least one item or enter a note.';
+    if (!this.contactChoice && !this.contactNote.trim()) {
+      this.error = 'Choose a status or enter a note.';
       return;
     }
     this.savingContact = true;
@@ -270,14 +249,20 @@ export class ElectionsComponent implements OnInit {
       `Date: ${this.formatDate(new Date())}`,
       `User: ${this.supabase.user()?.email || 'unknown'}`,
     ];
-    if (checked.length) lines.push(`Flags: ${checked.join(', ')}`);
+    if (this.contactChoice) lines.push(`Status: ${this.contactChoice}`);
     if (this.contactNote.trim()) lines.push(`Note: ${this.contactNote.trim()}`);
     const entry = lines.join('\n');
     const existing = (this.selected.notes ?? '').trim();
     const notes = existing ? `${existing}\n\n${entry}` : entry;
+    const patch: { notes: string; vote?: string | null; proxy?: string | null } = { notes };
+    if (this.contactChoice) {
+      const mapped = this.voteProxyFor(this.contactChoice);
+      if (mapped.vote !== undefined) patch.vote = mapped.vote;
+      if (mapped.proxy !== undefined) patch.proxy = mapped.proxy;
+    }
     const { error } = await this.supabase.client
       .from('election')
-      .update({ notes })
+      .update(patch)
       .eq('id', this.selected.electionId);
     this.savingContact = false;
     if (error) {
@@ -285,33 +270,8 @@ export class ElectionsComponent implements OnInit {
       return;
     }
     this.contactNote = '';
-    this.clearFlags();
+    this.contactChoice = null;
     this.contactMessage = 'Contact added.';
-    await this.load();
-  }
-
-  async saveVote() {
-    if (!this.selected) return;
-    if (!this.selected.electionId) {
-      this.error = 'No ballot row for this owner. Run the seed script.';
-      return;
-    }
-    this.savingVote = true;
-    this.error = '';
-    this.voteMessage = '';
-    const { error } = await this.supabase.client
-      .from('election')
-      .update({
-        vote: this.vote || null,
-        proxy: this.proxyCollected ? 'YES' : null,
-      })
-      .eq('id', this.selected.electionId);
-    this.savingVote = false;
-    if (error) {
-      this.error = error.message;
-      return;
-    }
-    this.voteMessage = 'Saved.';
     await this.load();
   }
 
@@ -335,6 +295,31 @@ export class ElectionsComponent implements OnInit {
     }
     this.groupMessage = 'Saved.';
     await this.load();
+  }
+
+  private voteProxyFor(choice: string): { vote?: string | null; proxy?: string | null } {
+    switch (choice) {
+      case 'FOR Us - No Action Needed':
+        return { vote: 'FOR', proxy: 'NA' };
+      case 'FOR Us - Needs follow up':
+        return { vote: 'FOR', proxy: 'Promised' };
+      case 'Proxy collected':
+        return { vote: 'FOR', proxy: 'Collected' };
+      case 'AGAINST Us':
+        return { vote: 'AGAINST', proxy: null };
+      case 'Reset':
+        return { vote: null, proxy: null };
+      default:
+        return {};
+    }
+  }
+
+  private choiceFromRow(vote: string | null, proxy: string | null): string | null {
+    if (proxy === 'Collected') return 'Proxy collected';
+    if (proxy === 'Promised') return 'FOR Us - Needs follow up';
+    if ((vote ?? '').toUpperCase() === 'FOR') return 'FOR Us - No Action Needed';
+    if ((vote ?? '').toUpperCase() === 'AGAINST') return 'AGAINST Us';
+    return null;
   }
 
   private formatDate(date: Date) {
